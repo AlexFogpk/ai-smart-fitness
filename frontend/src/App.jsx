@@ -22,7 +22,7 @@ function calcKBJU({ sex, weight, height, age, activity, goal }) {
 
 // ----- Основной компонент приложения
 function App() {
-  // Этапы: splash -> welcome -> rename -> onboard -> dashboard
+  // Этапы: splash -> welcome -> onboard -> dashboard
   const [stage, setStage] = useState("splash");
   // Telegram имя
   const [telegramName, setTelegramName] = useState("");
@@ -31,6 +31,15 @@ function App() {
   const [user, setUser] = useState(null); // параметры
   const [today, setToday] = useState({ calories: 0, protein: 0, fat: 0, carb: 0 });
   const [tab, setTab] = useState("home"); // меню навигации
+
+  // Состояние анкеты ("онбординг"), держим всегда — так работают хуки!
+  const [params, setParams] = useState({
+    sex: "male", age: "", height: "", weight: "",
+    activity: "1.2", goal: "weight-loss"
+  });
+
+  // Для welcome-сцены (фокус на input)
+  const inputRef = useRef();
 
   // Splash 2.5 сек
   useEffect(() => {
@@ -48,6 +57,13 @@ function App() {
       setName(window.Telegram.WebApp.initDataUnsafe.user.first_name);
     }
   }, []);
+
+  // Автофокус на input приветствия
+  useEffect(()=> {
+    if(stage === "welcome" && !name) {
+      setTimeout(()=>inputRef.current?.focus(), 400);
+    }
+  }, [stage, name]);
 
   // ----- Splash -----
   if (stage === "splash") {
@@ -79,8 +95,6 @@ function App() {
   if (stage === "welcome") {
     // Если нет имени — предлагаем сразу ввести
     if (!name) {
-      const inputRef = useRef();
-      useEffect(()=>{ setTimeout(()=>inputRef.current?.focus(), 400)},[]);
       return (
         <div style={{
           minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#f3f7fa 10%,#f2fff6 90%)",
@@ -152,10 +166,6 @@ function App() {
       border: "1px solid #e3ebf3", outline: "none", fontSize: 17, background: "#f6f8fc",
       color: "#14213d", fontWeight: 500, boxSizing:"border-box"
     };
-    const [params, setParams] = useState({
-      sex: "male", age: "", height: "", weight: "",
-      activity: "1.2", goal: "weight-loss"
-    });
     const handleChange = e => {
       const { name, value } = e.target;
       setParams(prev => ({ ...prev, [name]: value }));
@@ -286,7 +296,9 @@ function App() {
                 background:"#fff",borderRadius:32,boxShadow:"0 2px 25px #e9e9f1a0",
                 padding:"3vw 5vw 3vw 5vw",marginBottom:"19px"
               }}>
-                <div style={{fontWeight:800, fontSize:28, color:"#1d3557",textAlign:"center",marginBottom:2,marginTop:2}}>
+                <div style={{
+                  fontWeight:800, fontSize:28, color:"#1d3557",textAlign:"center",marginBottom:2,marginTop:2
+                }}>
                   {today.calories} <span style={{fontWeight:500,fontSize:15,color:"#b8bfc7"}}>Ккал</span>
                 </div>
                 <div style={{width:"100%",display:"flex",justifyContent:"center",marginBottom:7,marginTop:0}}>
