@@ -39,8 +39,21 @@ function App() {
     carb: 0,
   });
 
+  // Вынесем стили инпут/селект/лейбл для любых тем Telegram
+  const formFieldStyle = {
+    width: "100%",
+    marginTop: 5,
+    padding: "10px 12px",
+    borderRadius: 12,
+    border: "1px solid #e3ebf3",
+    outline: "none",
+    fontSize: 16,
+    background: "#f6f8fc",
+    color: "#14213d",         // фиксируем цвет для всех тем!
+    fontWeight: 500,
+  };
+
   // 1. Onboarding-форма
-    // ... внутри App()
   if (!user) {
     return (
       <div style={{
@@ -73,9 +86,19 @@ function App() {
             minWidth: 280,
             maxWidth: 350,
             width: "100%",
-            margin: "auto"
+            margin: "auto",
+            color: "#14213d" // все лейблы точно будут темными!
           }}
         >
+          {/* Фикс универсальный: для темных тем Telegram */}
+          <style>
+            {`
+              input, select, label, option {
+                color: #14213d !important;
+                background: #f6f8fc !important;
+              }
+            `}
+          </style>
           <h2 style={{
             textAlign: "center", fontWeight: 900,
             fontSize: 26, marginBottom: 16, color: "#1d3557", letterSpacing: ".01em"
@@ -86,53 +109,27 @@ function App() {
             Заполни данные и получи индивидуальную цель!
           </p>
           <div style={{ marginBottom: 18 }}>
-            <label style={{ fontWeight: 600 }}>Пол:</label><br />
-            <select required name="sex" defaultValue="male"
-              style={{
-                width: "100%", marginTop: 5, padding: "10px 12px", borderRadius: 12,
-                border: "1px solid #e3ebf3", outline: "none", fontSize: 16, background: "#f6f8fc"
-              }}>
+            <label style={{ fontWeight: 600 }} htmlFor="sex">Пол:</label><br />
+            <select required name="sex" defaultValue="male" style={formFieldStyle}>
               <option value="male">Мужской</option>
               <option value="female">Женский</option>
             </select>
           </div>
           <div style={{ marginBottom: 18 }}>
-            <label style={{ fontWeight: 600 }}>Возраст:</label>
-            <input required type="number" name="age" min={10} max={100}
-              style={{
-                marginTop: 5, width: "100%", padding: "10px 12px", borderRadius: 12,
-                border: "1px solid #e3ebf3", outline: "none", fontSize: 16, background: "#f6f8fc"
-              }}
-              placeholder="Например, 25"
-            />
+            <label style={{ fontWeight: 600 }} htmlFor="age">Возраст:</label>
+            <input required type="number" name="age" min={10} max={100} style={formFieldStyle} placeholder="Например, 25" />
           </div>
           <div style={{ marginBottom: 18 }}>
-            <label style={{ fontWeight: 600 }}>Рост (см):</label>
-            <input required type="number" name="height" min={120} max={250}
-              style={{
-                marginTop: 5, width: "100%", padding: "10px 12px", borderRadius: 12,
-                border: "1px solid #e3ebf3", outline: "none", fontSize: 16, background: "#f6f8fc"
-              }}
-              placeholder="Например, 180"
-            />
+            <label style={{ fontWeight: 600 }} htmlFor="height">Рост (см):</label>
+            <input required type="number" name="height" min={120} max={250} style={formFieldStyle} placeholder="Например, 180" />
           </div>
           <div style={{ marginBottom: 18 }}>
-            <label style={{ fontWeight: 600 }}>Вес (кг):</label>
-            <input required type="number" name="weight" min={30} max={250}
-              style={{
-                marginTop: 5, width: "100%", padding: "10px 12px", borderRadius: 12,
-                border: "1px solid #e3ebf3", outline: "none", fontSize: 16, background: "#f6f8fc"
-              }}
-              placeholder="Например, 70"
-            />
+            <label style={{ fontWeight: 600 }} htmlFor="weight">Вес (кг):</label>
+            <input required type="number" name="weight" min={30} max={250} style={formFieldStyle} placeholder="Например, 70" />
           </div>
           <div style={{ marginBottom: 18 }}>
-            <label style={{ fontWeight: 600 }}>Активность:</label>
-            <select required name="activity" defaultValue="1.2"
-              style={{
-                width: "100%", marginTop: 5, padding: "10px 12px", borderRadius: 12,
-                border: "1px solid #e3ebf3", outline: "none", fontSize: 16, background: "#f6f8fc"
-              }}>
+            <label style={{ fontWeight: 600 }} htmlFor="activity">Активность:</label>
+            <select required name="activity" defaultValue="1.2" style={formFieldStyle}>
               <option value="1.2">Минимальная</option>
               <option value="1.375">Лёгкая (1-3 трен./нед)</option>
               <option value="1.55">Средняя (3-5 трен./нед)</option>
@@ -140,12 +137,8 @@ function App() {
             </select>
           </div>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontWeight: 600 }}>Цель:</label>
-            <select required name="goal" defaultValue="weight-loss"
-              style={{
-                width: "100%", marginTop: 5, padding: "10px 12px", borderRadius: 12,
-                border: "1px solid #e3ebf3", outline: "none", fontSize: 16, background: "#f6f8fc"
-              }}>
+            <label style={{ fontWeight: 600 }} htmlFor="goal">Цель:</label>
+            <select required name="goal" defaultValue="weight-loss" style={formFieldStyle}>
               <option value="weight-loss">Похудение</option>
               <option value="maintain">Поддержание</option>
               <option value="weight-gain">Набор массы</option>
@@ -164,7 +157,6 @@ function App() {
     )
   }
 
-  
   // 2. После онбординга — расчет и дашборд
   const kbju = calcKBJU(user);
 
@@ -173,9 +165,15 @@ function App() {
 
   return (
     <div style={{
-      minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", background: "linear-gradient(135deg,#fff,#e9e9f7 60%,#d4d8f2)"
+      minHeight: "100vh",
+      display: "flex", flexDirection: "column", alignItems: "center",
+      background: "linear-gradient(135deg,#fff,#e9e9f7 60%,#d4d8f2)"
     }}>
-      <h2 style={{ marginTop: 28, fontWeight: 700 }}>
+      <h2 style={{
+        marginTop: 28,
+        fontWeight: 700,
+        color: "#14213d"
+      }}>
         Привет, {user.sex === 'male' ? 'тренирующийся' : 'тренирующаяся'}!
       </h2>
       <p style={{ color: "#888" }}>Твоя суточная цель: {kbju.calories} ккал, Б: {kbju.protein} г, Ж: {kbju.fat} г, У: {kbju.carb} г</p>
@@ -193,7 +191,6 @@ function App() {
           max={kbju.calories}
           color="#68e0cf"
         />
-
         {/* БЖУ полоски */}
         <MiniBar
           label="Белки"
@@ -216,8 +213,26 @@ function App() {
       </div>
       {/* Тестовые кнопки "съесть" */}
       <div>
-        <button onClick={() => setToday(t => ({ ...t, calories: t.calories + 120, protein: t.protein + 5, fat: t.fat + 2, carb: t.carb + 15 }))} style={{ margin: 12, padding: "12px 24px", borderRadius: 12, background: "#6ccf83", color: "#fff", border: 0 }}>+ Добавить еду (пример)</button>
-        <button onClick={() => setToday({ calories: 0, protein: 0, fat: 0, carb: 0 })} style={{ margin: 12, padding: "12px 24px", borderRadius: 12, background: "#e27d6e", color: "#fff", border: 0 }}>Сбросить</button>
+        <button onClick={() => setToday(t => ({
+            ...t,
+            calories: t.calories + 120,
+            protein: t.protein + 5,
+            fat: t.fat + 2,
+            carb: t.carb + 15
+          }))}
+          style={{
+            margin: 12, padding: "12px 24px", borderRadius: 12,
+            background: "#6ccf83", color: "#fff", border: 0
+          }}>
+          + Добавить еду (пример)
+        </button>
+        <button onClick={() => setToday({ calories: 0, protein: 0, fat: 0, carb: 0 })}
+          style={{
+            margin: 12, padding: "12px 24px", borderRadius: 12,
+            background: "#e27d6e", color: "#fff", border: 0
+          }}>
+          Сбросить
+        </button>
       </div>
     </div>
   );
@@ -241,8 +256,14 @@ function Circle({ pct, label, value, max, color }) {
           style={{ transition: ".4s stroke-dashoffset" }}
         />
       </svg>
-      <div style={{ fontSize: 25, fontWeight: 800, marginTop: -90, marginBottom: 78, color }}>{value} <span style={{ fontWeight: 400, fontSize: 14, color: "#999" }}>/ {max}</span></div>
-      <div style={{ fontSize: 17, fontWeight: 500, color: "#555" }}>{label}</div>
+      <div style={{
+        fontSize: 25, fontWeight: 800, marginTop: -90, marginBottom: 78, color
+      }}>{value} <span style={{
+        fontWeight: 400, fontSize: 14, color: "#999"
+      }}>/ {max}</span></div>
+      <div style={{
+        fontSize: 17, fontWeight: 500, color: "#555"
+      }}>{label}</div>
     </div>
   );
 }
@@ -254,7 +275,10 @@ function MiniBar({ label, value, max, color }) {
       <span style={{ fontWeight: 600, fontSize: 16, color }}>{label}: </span>
       <span style={{ fontWeight: 700 }}>{value}</span> / {max}
       <div style={{ width: "100%", height: "10px", background: "#eee", borderRadius: 8, marginTop: 2 }}>
-        <div style={{ height: "100%", width: `${Math.min(100, value / max * 100)}%`, background: color, borderRadius: 8, transition: ".4s width" }}></div>
+        <div style={{
+          height: "100%", width: `${Math.min(100, value / max * 100)}%`, background: color,
+          borderRadius: 8, transition: ".4s width"
+        }}></div>
       </div>
     </div>
   );
