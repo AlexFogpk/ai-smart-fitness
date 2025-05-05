@@ -1,6 +1,7 @@
 from flask import Flask, request
 import os
 from telegram import Bot, Update
+import sys
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 app = Flask(__name__)
@@ -12,15 +13,23 @@ def home():
 
 @app.route('/telegram-webhook', methods=['POST'])
 def telegram_webhook():
-    update = Update.de_json(request.get_json(force=True), bot)
-    chat_id = update.message.chat.id
-    text = update.message.text
+    try:
+        print("Получен запрос от Telegram:", file=sys.stderr)
+        print(request.get_json(force=True), file=sys.stderr)
 
-    # Простая обработка
-    if text == '/start':
-        bot.send_message(chat_id=chat_id, text='Привет! Это Ai_SmartFitnessBot. Я помогу тебе с фитнесом и питанием!')
-    else:
-        bot.send_message(chat_id=chat_id, text='Я получил от тебя сообщение: ' + text)
+        update = Update.de_json(request.get_json(force=True), bot)
+        chat_id = update.message.chat.id
+
+        if hasattr(update.message, "text") and update.message.text:
+            text = update.message.text
+            if text.strip().lower() == '/start':
+                bot.send_message(chat_id=chat_id, text='Привет! Это Ai_SmartFitnessBot. Я помогу тебе с фитнесом и питанием!')
+            else:
+                bot.send_message(chat_id=chat_id, text='Я получил от тебя сообщение: ' + text)
+        else:
+            bot.send_message(chat_id=chat_id, text='Я понимаю только текстовые сообщения. Пришли мне текст.')
+    except Exception as e:
+        print(f"Ошибка: {e}", file=sys.stderr)
     return 'ok', 200
 
 if __name__ == '__main__':
