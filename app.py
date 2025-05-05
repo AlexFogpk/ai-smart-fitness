@@ -1,6 +1,7 @@
 from flask import Flask, request
 import os
 from telegram import Bot, Update
+import asyncio
 import sys
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
@@ -23,11 +24,11 @@ def telegram_webhook():
         if hasattr(update.message, "text") and update.message.text:
             text = update.message.text
             if text.strip().lower() == '/start':
-                bot.send_message(chat_id=chat_id, text='Привет! Это Ai_SmartFitnessBot. Я помогу тебе с фитнесом и питанием!')
+                asyncio.run(bot.send_message(chat_id=chat_id, text='Привет! Это Ai_SmartFitnessBot. Я помогу тебе с фитнесом и питанием!'))
             else:
-                bot.send_message(chat_id=chat_id, text='Я получил от тебя сообщение: ' + text)
+                asyncio.run(bot.send_message(chat_id=chat_id, text='Я получил от тебя сообщение: ' + text))
         else:
-            bot.send_message(chat_id=chat_id, text='Я понимаю только текстовые сообщения. Пришли мне текст.')
+            asyncio.run(bot.send_message(chat_id=chat_id, text='Я понимаю только текстовые сообщения. Пришли мне текст.'))
     except Exception as e:
         print(f"Ошибка: {e}", file=sys.stderr)
     return 'ok', 200
