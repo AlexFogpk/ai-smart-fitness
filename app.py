@@ -1,6 +1,6 @@
 from flask import Flask, request
 import os
-from telegram import Bot, Update
+from telegram import Bot, Update, KeyboardButton, ReplyKeyboardMarkup, WebAppInfo
 import asyncio
 import sys
 
@@ -8,7 +8,7 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 app = Flask(__name__)
 bot = Bot(token=TELEGRAM_TOKEN)
 
-# Создаём event loop один раз (глобально для всего процесса)
+# Создаем event loop один раз (глобально для всего процесса)
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
@@ -26,13 +26,46 @@ def telegram_webhook():
         chat_id = update.message.chat.id
 
         if hasattr(update.message, "text") and update.message.text:
-            text = update.message.text
-            if text.strip().lower() == '/start':
-                loop.run_until_complete(bot.send_message(chat_id=chat_id, text='Привет! Это Ai_SmartFitnessBot. Я помогу тебе с фитнесом и питанием!'))
+            text = update.message.text.strip().lower()
+            # Команда /start
+            if text == '/start':
+                loop.run_until_complete(
+                    bot.send_message(
+                        chat_id=chat_id,
+                        text='Привет! Это Ai_SmartFitnessBot. Я помогу тебе с фитнесом и питанием!\nНапиши /app чтобы открыть мини-приложение.'
+                    )
+                )
+            # Команда /app
+            elif text == '/app':
+                keyboard = [
+                    [KeyboardButton(
+                        text="Открыть фитнес-приложение",
+                        web_app=WebAppInfo(url="https://ai-sf-frontend-production.up.railway.app")
+                    )]
+                ]
+                reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+                loop.run_until_complete(
+                    bot.send_message(
+                        chat_id=chat_id,
+                        text='Запусти мини-приложение:',
+                        reply_markup=reply_markup
+                    )
+                )
+            # Любой другой текст
             else:
-                loop.run_until_complete(bot.send_message(chat_id=chat_id, text='Я получил от тебя сообщение: ' + text))
+                loop.run_until_complete(
+                    bot.send_message(
+                        chat_id=chat_id,
+                        text='Я получил от тебя сообщение: ' + update.message.text
+                    )
+                )
         else:
-            loop.run_until_complete(bot.send_message(chat_id=chat_id, text='Я понимаю только текстовые сообщения. Пришли мне текст.'))
+            loop.run_until_complete(
+                bot.send_message(
+                    chat_id=chat_id,
+                    text='Я понимаю только текстовые сообщения. Пришли мне текст.'
+                )
+            )
     except Exception as e:
         print(f"Ошибка: {e}", file=sys.stderr)
     return 'ok', 200
@@ -40,4 +73,3 @@ def telegram_webhook():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-    
