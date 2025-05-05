@@ -1,21 +1,18 @@
 from flask import Flask, request
 import os
 from telegram import Bot, Update
-from telegram.ext import CommandHandler, MessageHandler, Filters, Dispatcher
-import threading
+from telegram.ext import CommandHandler, MessageHandler, filters, Dispatcher
 
-TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')  # <-- ваш настоящий токен
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 
 app = Flask(__name__)
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
-# Главная страница
 @app.route('/')
 def home():
     return "Hello, this is the Ai_SmartFitnessBot backend!"
 
-# Точка для Telegram webhook
 @app.route('/telegram-webhook', methods=['POST'])
 def telegram_webhook():
     if request.method == "POST":
@@ -23,7 +20,6 @@ def telegram_webhook():
         dp.process_update(update)
         return 'ok', 200
 
-# Создаем обработчики для Telegram
 def start(update, context):
     update.message.reply_text('Привет! Это Ai_SmartFitnessBot. Я помогу тебе с фитнесом и питанием!')
 
@@ -34,9 +30,8 @@ from telegram.ext import Dispatcher
 
 dp = Dispatcher(bot, None, workers=0)
 dp.add_handler(CommandHandler("start", start))
-dp.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+dp.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-# Фоновый запуск
 def run():
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
