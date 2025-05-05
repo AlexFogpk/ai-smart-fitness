@@ -8,6 +8,10 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 app = Flask(__name__)
 bot = Bot(token=TELEGRAM_TOKEN)
 
+# Создаём event loop один раз (глобально для всего процесса)
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
 @app.route('/')
 def home():
     return "Hello, this is the Ai_SmartFitnessBot backend!"
@@ -24,11 +28,11 @@ def telegram_webhook():
         if hasattr(update.message, "text") and update.message.text:
             text = update.message.text
             if text.strip().lower() == '/start':
-                asyncio.run(bot.send_message(chat_id=chat_id, text='Привет! Это Ai_SmartFitnessBot. Я помогу тебе с фитнесом и питанием!'))
+                loop.run_until_complete(bot.send_message(chat_id=chat_id, text='Привет! Это Ai_SmartFitnessBot. Я помогу тебе с фитнесом и питанием!'))
             else:
-                asyncio.run(bot.send_message(chat_id=chat_id, text='Я получил от тебя сообщение: ' + text))
+                loop.run_until_complete(bot.send_message(chat_id=chat_id, text='Я получил от тебя сообщение: ' + text))
         else:
-            asyncio.run(bot.send_message(chat_id=chat_id, text='Я понимаю только текстовые сообщения. Пришли мне текст.'))
+            loop.run_until_complete(bot.send_message(chat_id=chat_id, text='Я понимаю только текстовые сообщения. Пришли мне текст.'))
     except Exception as e:
         print(f"Ошибка: {e}", file=sys.stderr)
     return 'ok', 200
@@ -36,3 +40,4 @@ def telegram_webhook():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+    
