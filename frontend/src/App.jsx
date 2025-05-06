@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaHome, FaAppleAlt, FaRobot, FaUtensils, FaCog } from "react-icons/fa";
-import { PiBowlFoodFill } from "react-icons/pi";
+import LogoRobot from "./LoadingLogos";
 import {
   CalculatorMobile,
   AIChatMobile,
@@ -148,47 +148,47 @@ function App() {
     );
   }
 
-  if (stage === "welcome") {
-    return (
-      <div style={{
-        minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#f3f7fa 10%,#f2fff6 90%)",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
-      }}>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8 }}
+ if (stage === "welcome") {
+  return (
+    <div style={{
+      minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#f3f7fa 10%,#f2fff6 90%)",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
+    }}>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8 }}
+        style={{
+          padding: "32px 16px 28px 16px", background: "#fff", borderRadius: 27,
+          boxShadow: "0 4px 38px #ddeff940", width: "89vw", maxWidth: 390, minHeight: 230,
+          display: "flex", flexDirection: "column", alignItems: "center"
+        }}>
+        <div style={{
+          width: 60, height: 60, background: "#229ED9", borderRadius: "50%",
+          display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14, overflow: "hidden"
+        }}>
+          <LogoRobot />
+        </div>
+        <span style={{
+          fontSize: 25, fontWeight: 800, color: "#1d3557",
+          minHeight: 35, marginBottom: 22, marginTop: 3, letterSpacing: ".01em"
+        }}>
+          {typed}<span style={{ opacity: .5, fontWeight: 900 }}>|</span>
+        </span>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
           style={{
-            padding: "32px 16px 28px 16px", background: "#fff", borderRadius: 27,
-            boxShadow: "0 4px 38px #ddeff940", width: "89vw", maxWidth: 390, minHeight: 230,
-            display: "flex", flexDirection: "column", alignItems: "center"
-          }}>
-          <div style={{
-            width: 60, height: 60, background: "#229ED9", borderRadius: "50%",
-            display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14
-          }}>
-            <PiBowlFoodFill color="#fff" size={36} />
-          </div>
-          <span style={{
-            fontSize: 25, fontWeight: 800, color: "#1d3557",
-            minHeight: 35, marginBottom: 22, marginTop: 3, letterSpacing: ".01em"
-          }}>
-            {typed}<span style={{ opacity: .5, fontWeight: 900 }}>|</span>
-          </span>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            style={{
-              marginTop: 7,
-              background: "linear-gradient(135deg,#229ED9 70%,#53ddc9)", color: "#fff",
-              fontWeight: 800, fontSize: 18, border: "none", borderRadius: 13,
-              padding: "13px 45px", margin: "9px 0 0 0", cursor: "pointer", boxShadow: "0 2px 12px #3bafe82a"
-            }}
-            onClick={() => setStage("app")}
-          >
-            Начать
-          </motion.button>
-        </motion.div>
-      </div>
-    );
-  }
+            marginTop: 7,
+            background: "linear-gradient(135deg,#229ED9 70%,#53ddc9)", color: "#fff",
+            fontWeight: 800, fontSize: 18, border: "none", borderRadius: 13,
+            padding: "13px 45px", margin: "9px 0 0 0", cursor: "pointer", boxShadow: "0 2px 12px #3bafe82a"
+          }}
+          onClick={() => setStage("app")}
+        >
+          Начать
+        </motion.button>
+      </motion.div>
+    </div>
+  );
+}
 
   return (
     <div
