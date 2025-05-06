@@ -2,6 +2,15 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaHome, FaAppleAlt, FaDumbbell, FaRobot, FaCog, FaBolt, FaUtensils } from "react-icons/fa";
 import { PiBowlFoodFill } from "react-icons/pi";
+import {
+  CalculatorMobile,
+  AIChatMobile,
+  SettingsMobile,
+  MealsMobile,
+  MacroBar,
+  inputStyle,
+  buttonStyle,
+} from "./components/MobileExtra";
 
 // --------- Утилиты ---------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
