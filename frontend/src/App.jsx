@@ -212,11 +212,12 @@ function App() {
   return (
     <div style={{ minHeight: "100vh", background: "#fafbfc", fontFamily: "system-ui", position: "relative" }}>
       {Hamburger}
-      <SideMenu
+     <SideMenu
         open={sideMenuOpen}
         onClose={() => setSideMenuOpen(false)}
         current={tab}
         onSelect={setTab}
+        profile={profile} // <-- вот это!
       />
       <AnimatePresence mode="wait">
         {tab === "home" && (
