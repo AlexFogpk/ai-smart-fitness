@@ -1,19 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaHome, FaAppleAlt, FaDumbbell, FaRobot, FaCog } from "react-icons/fa";
+import { FaHome, FaAppleAlt, FaDumbbell, FaRobot, FaCog, FaBolt, FaUtensils } from "react-icons/fa";
+import { PiBowlFoodFill } from "react-icons/pi";
 
-// ----- Утилита для КБЖУ
-function calcKBJU({ sex, weight, height, age, activity, goal }) {
+// --------- Утилиты ---------
+function getKBJU({ sex, weight, height, age, activity, goal }) {
   let bmr =
     sex === "male"
       ? 10 * weight + 6.25 * height - 5 * age + 5
       : 10 * weight + 6.25 * height - 5 * age - 161;
-  let tdee = bmr * Number(activity);
-  if (goal === "weight-loss") tdee -= 300;
-  else if (goal === "weight-gain") tdee += 300;
-  let protein = Math.round((tdee * 0.25) / 4);
-  let fat = Math.round((tdee * 0.30) / 9);
-  let carb = Math.round((tdee * 0.45) / 4);
+  let tdee = bmr * activity;
+  if (goal === "loss") tdee -= 300;
+  if (goal === "gain") tdee += 300;
+  const protein = Math.round(weight * 1.7);
+  const fat = Math.round(weight * 0.9);
+  const carb = Math.round((tdee - (protein * 4 + fat * 9)) / 4);
   return {
     calories: Math.round(tdee),
     protein,
@@ -22,535 +23,604 @@ function calcKBJU({ sex, weight, height, age, activity, goal }) {
   };
 }
 
-// ----- Главный компонент
+function getDayString(date = new Date()) {
+  const days = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+  const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+  return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
+}
+
+// --------- Начальные данные ---------
+const defaultProfile = {
+  sex: "male",
+  age: 25,
+  height: 180,
+  weight: 75,
+  activity: 1.375,
+  goal: "maintain",
+  name: "Пользователь",
+};
+
+// --------- Главный компонент ---------
 function App() {
-  // splash -> welcome -> onboard -> dashboard
-  const [stage, setStage] = useState("splash");
-  const [name, setName] = useState("");
-  const [user, setUser] = useState(null); // параметры
-  const [today, setToday] = useState({ calories: 0, protein: 0, fat: 0, carb: 0 });
-  const [tab, setTab] = useState("home");
-  const [params, setParams] = useState({
-    sex: "male", age: "", height: "", weight: "",
-    activity: "1.2", goal: "weight-loss"
-  });
-  const inputRef = useRef();
-  const [typed, setTyped] = useState(""); // для анимации печатающегося текста
-  const [telegramName, setTelegramName] = useState("");
+  // --- Навигация ---
+  const [tab, setTab] = useState("home"); // home, calc, chat, meals, settings
 
-  // ----- Splash (анимированный)
-  useEffect(() => {
-    if (stage === "splash") {
-      setTimeout(() => setStage("welcome"), 2300);
-    }
-  }, [stage]);
+  // --- Профиль пользователя ---
+  const [profile, setProfile] = useState(defaultProfile);
 
-  // Получаем имя из Telegram только один раз (при старте)
-  useEffect(() => {
-    if (
-      window.Telegram &&
-      window.Telegram.WebApp &&
-      window.Telegram.WebApp.initDataUnsafe?.user?.first_name
-    ) {
-      setTelegramName(window.Telegram.WebApp.initDataUnsafe.user.first_name);
-    }
-  }, []);
+  // --- Цели КБЖУ ---
+  const kbju = getKBJU(profile);
 
-  // Если имя из Telegram подтянулось, сразу записываем его и переходим к анкете
-  useEffect(() => {
-    if (stage === "welcome" && telegramName) {
-      setName(telegramName);
-      setTimeout(() => setStage("onboard"), 900); // маленькая задержка для анимации welcome
-    }
-  }, [stage, telegramName]);
+  // --- Состояние приёмов пищи ---
+  const [meals, setMeals] = useState([
+    // { name: "Лосось", grams: 470, protein: 30, carb: 2, fat: 16, calories: 210, emoji: "🐟" }
+  ]);
 
-  // ----- Печатающийся текст на welcome
-  useEffect(() => {
-    if (stage === "welcome" && !telegramName) {
-      const full = "Добро пожаловать в SmartFitness AI!";
-      setTyped("");
-      let i = 0;
-      const typing = setInterval(() => {
-        setTyped(txt => {
-          if (i < full.length) {
-            i++;
-            return full.slice(0, i);
-          } else {
-            clearInterval(typing);
-            return full;
-          }
-        });
-      }, 34);
-      return () => clearInterval(typing);
-    }
-  }, [stage, telegramName]);
+  // --- Итог за день ---
+  const summary = meals.reduce(
+    (acc, m) => ({
+      calories: acc.calories + (m.calories || 0),
+      protein: acc.protein + (m.protein || 0),
+      carb: acc.carb + (m.carb || 0),
+      fat: acc.fat + (m.fat || 0),
+    }),
+    { calories: 0, protein: 0, carb: 0, fat: 0 }
+  );
 
-  // ----- Splash -----
-  if (stage === "splash") {
-    return (
-      <div style={{
-        minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#eef5fe 20%,#dffcf9 90%)",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
-      }}>
-        <motion.div
-          initial={{ scale: 0.7, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 220, damping: 17 }}
-          style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
-        >
-          <AppleSpinner />
-          <motion.div
-            style={{
-              fontSize: 29, color: "#1d3557", fontWeight: 800, letterSpacing: ".01em", marginTop: 16
-            }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: .18, duration: .7 }}
-          >
-            SmartFitness AI
-          </motion.div>
-        </motion.div>
-      </div>
-    );
+  // --- Состояние чата ---
+  const [messages, setMessages] = useState([
+    // { sender: "ai", text: "Привет! Я ваш ИИ тренер." }
+  ]);
+
+  // --- Экран калькулятора: ручной или ИИ ---
+  const [calcMode, setCalcMode] = useState("manual"); // manual, ai
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // --- Для смены имени в настройках ---
+  const [editName, setEditName] = useState(false);
+  const [newName, setNewName] = useState(profile.name);
+
+  // --- Анимация блоков ---
+  const pageVariants = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -30 },
+  };
+
+  // --- Добавление еды вручную или с помощью ИИ ---
+  function handleAddMeal(meal) {
+    setMeals([...meals, meal]);
+    setTab("home");
   }
 
-  // ----- Приветствие -----
-  if (stage === "welcome") {
-    // Показываем красивый приветственный экран и ждём загрузку имени
-    return (
-      <div style={{
-        minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#f3f7fa 10%,#f2fff6 90%)",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
-      }}>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: .7 }}
-          style={{
-            padding: "34px 10px 30px 10px", background: "#fff", borderRadius: 29,
-            boxShadow: "0 4px 38px #ddeff940", width: "95vw", maxWidth: 390, minHeight: 270,
-            display: "flex", flexDirection: "column", alignItems: "center"
-          }}
-        >
-          <TypingText text={typed || `Здравствуйте${telegramName ? ', ' + telegramName : ""}!`} style={{
-            fontSize: 26, fontWeight: 800, color: "#1d3557",
-            minHeight: 38, marginBottom: 21, marginTop: 5
-          }} />
-          {!telegramName && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: .5, duration: .7 }}
-              style={{ fontSize: 18, color: "#888", marginTop: 18 }}
-            >
-              Ожидание данных Telegram...
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
-    );
+  // --- Сброс профиля ---
+  function handleReset() {
+    setProfile(defaultProfile);
+    setMeals([]);
+    setMessages([]);
+    setTab("home");
   }
 
-  // ----- Анкета -----
-  if (stage === "onboard" && !user) {
-    const formFieldStyle = {
-      width: "100%", marginTop: 5, padding: "13px 12px", borderRadius: 12,
-      border: "1px solid #e3ebf3", outline: "none", fontSize: 17, background: "#f6f8fc",
-      color: "#14213d", fontWeight: 500, boxSizing: "border-box"
-    };
-    const handleChange = e => {
-      const { name, value } = e.target;
-      setParams(prev => ({ ...prev, [name]: value }));
-    };
-    const handleSubmit = e => {
-      e.preventDefault();
-      document.activeElement && document.activeElement.blur();
-      if (params.age && params.height && params.weight) {
-        setUser({
-          ...params,
-          age: Number(params.age),
-          height: Number(params.height),
-          weight: Number(params.weight),
-          name
-        });
-      }
-    };
-    return (
-      <div style={{
-        minHeight: "100vh", width: "100vw",
-        background: "linear-gradient(135deg, #f5fafd 60%, #e1f6ef 120%)",
-        display: "flex", alignItems: "center", justifyContent: "center"
-      }}>
-        <motion.form
-          onSubmit={handleSubmit}
-          autoComplete="off"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: .7 }}
-          style={{
-            background: "#fff", borderRadius: 25,
-            boxShadow: "0 4px 24px #ddeff940",
-            padding: "27px 7px 18px 7px", width: "99vw", maxWidth: 385, margin: "0 auto",
-            color: "#14213d", boxSizing: "border-box"
-          }}
-        >
-          <h2 style={{
-            textAlign: "center", fontWeight: 900,
-            fontSize: 22, marginBottom: 16, color: "#1d3557", letterSpacing: ".01em"
-          }}>
-            {name ? <>Введи параметры, {name}!</> : <>Твои параметры</>}
-          </h2>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontWeight: "600" }}>Пол:</label><br />
-            <select name="sex" value={params.sex} onChange={handleChange} style={formFieldStyle}>
-              <option value="male">Мужской</option>
-              <option value="female">Женский</option>
-            </select>
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontWeight: "600" }}>Возраст:</label>
-            <input type="number" name="age" min={10} max={100}
-              style={formFieldStyle}
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="25"
-              value={params.age}
-              onChange={handleChange}
-              autoComplete="off"
-              required
-            />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontWeight: "600" }}>Рост (см):</label>
-            <input type="number" name="height" min={120} max={250}
-              style={formFieldStyle}
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="180"
-              value={params.height}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontWeight: "600" }}>Вес (кг):</label>
-            <input type="number" name="weight" min={30} max={250}
-              style={formFieldStyle}
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="70"
-              value={params.weight}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontWeight: "600" }}>Активность:</label>
-            <select name="activity" value={params.activity} onChange={handleChange} style={formFieldStyle}>
-              <option value="1.2">Минимальная</option>
-              <option value="1.375">Лёгкая (1-3 трен./нед)</option>
-              <option value="1.55">Средняя (3-5 трен./нед)</option>
-              <option value="1.725">Высокая</option>
-            </select>
-          </div>
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ fontWeight: "600" }}>Цель:</label>
-            <select name="goal" value={params.goal} onChange={handleChange} style={formFieldStyle}>
-              <option value="weight-loss">Похудение</option>
-              <option value="maintain">Поддержание</option>
-              <option value="weight-gain">Набор массы</option>
-            </select>
-          </div>
-          <motion.button
-            type="submit"
-            whileTap={{ scale: 0.95 }}
-            style={{
-              width: "100%", background: "linear-gradient(135deg,#68e0cf 60%,#6ccf83)", padding: "15px",
-              borderRadius: 15, color: "#fff", border: 0, fontWeight: 800, fontSize: 19, letterSpacing: ".01em",
-              boxShadow: "0 2px 12px #63d1c380", marginTop: 8, transition: "0.13s", cursor: "pointer"
-            }}>
-            Сохранить и продолжить
-          </motion.button>
-        </motion.form>
-      </div>
-    );
+  // --- Обновить имя пользователя ---
+  function handleSaveName() {
+    setProfile({ ...profile, name: newName.trim() || profile.name });
+    setEditName(false);
   }
 
-  // ----- DASHBOARD -----
-  if (user) {
-    const kbju = calcKBJU(user);
-    // процент для колец и прогресса
-    const pct = (val, max) => Math.min(100, Math.round((val / max) * 100));
+  // --- UI: Главная страница ---
+  function Home() {
     return (
-      <div style={{
-        minHeight: "100vh", width: "100vw", background: "#fafbf8",
-        display: "flex", flexDirection: "column", alignItems: "center"
-      }}>
-        {/* Верхняя секция: кольца прогресса */}
-        <motion.div
-          initial={{ opacity: 0, y: -22 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: .8 }}
-          style={{
-            width: "100%", maxWidth: 450, margin: "0 auto", marginBottom: 8,
-            paddingTop: 25, display: "flex", flexDirection: "column", alignItems: "center"
-          }}>
-          {/* Три кольца БЖУ */}
-          <div style={{
-            display: "flex", gap: 28, justifyContent: "center", marginBottom: 7
-          }}>
-            <AnimatedRing percent={pct(today.protein, kbju.protein)} color="#6CCF83" size={70} label="Белки" value={today.protein} max={kbju.protein} />
-            <AnimatedRing percent={pct(today.fat, kbju.fat)} color="#ffbf47" size={70} label="Жиры" value={today.fat} max={kbju.fat} />
-            <AnimatedRing percent={pct(today.carb, kbju.carb)} color="#40a4ff" size={70} label="Углеводы" value={today.carb} max={kbju.carb} />
+      <motion.div
+        key="home"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        style={{
+          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
+          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4"
+        }}
+      >
+        <div style={{ display: "flex", gap: 18, justifyContent: "flex-start", alignItems: "flex-start" }}>
+          {/* Кольцо калорий с логотипом */}
+          <div style={{ background: "#fff", borderRadius: 22, boxShadow: "0 2px 16px #e6e6e6", padding: 22, width: 170, minHeight: 220, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <CaloriesRing value={summary.calories} max={kbju.calories}>
+              <BotLogo />
+            </CaloriesRing>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#888", marginTop: 8, marginBottom: 10 }}>КАЛОРИИ</div>
+            <div style={{ fontWeight: 800, fontSize: 34, marginTop: -90, color: "#222" }}>{summary.calories}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#b9b9b9", marginBottom: 18 }}>{kbju.calories} ккал цель</div>
+            <div style={{ width: "100%", marginTop: 15 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#3b3b3b", marginBottom: 5 }}>Обзор</div>
+              <MacroBar label="Углеводы" value={summary.carb} max={kbju.carb} color="#3bafe8" />
+              <MacroBar label="Белки" value={summary.protein} max={kbju.protein} color="#5fc77f" />
+              <MacroBar label="Жиры" value={summary.fat} max={kbju.fat} color="#ffb24a" />
+            </div>
           </div>
-          {/* Кольцо калорий */}
-          <div style={{ marginTop: 10, marginBottom: 10 }}>
-            <AnimatedRing percent={pct(today.calories, kbju.calories)} color="#ff5252" size={108}
-              label="Калории" value={today.calories} max={kbju.calories} big />
-          </div>
-        </motion.div>
-        {/* Кнопки действий */}
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: .25, duration: .7 }}
-          style={{ width: "100%", maxWidth: 410, marginBottom: 2, display: "flex", gap: 13, justifyContent: "center" }}>
-          <motion.button whileTap={{ scale: 0.98 }} style={{
-            flex: 1, background: "linear-gradient(135deg,#2573ff 60%,#53ddc9)", color: "#fff",
-            border: "none", borderRadius: 15, fontWeight: 700, fontSize: 17, padding: "15px 0",
-            boxShadow: "0 2px 14px #63d1c326", cursor: "pointer"
-          }}
-            onClick={() => setToday(t => ({
-              ...t,
-              calories: t.calories + 120, protein: t.protein + 5, fat: t.fat + 2, carb: t.carb + 15
-            }))}
-          >Добавить еду</motion.button>
-          <motion.button whileTap={{ scale: 0.98 }} style={{
-            flex: 1, background: "linear-gradient(135deg,#68e0cf 60%,#6ccf83)",
-            color: "#fff", border: "none", borderRadius: 15, fontWeight: 700, fontSize: 17, padding: "15px 0",
-            boxShadow: "0 2px 14px #63d1c326", cursor: "pointer"
-          }}>Тренер ИИ</motion.button>
-        </motion.div>
-        {/* Переключатель табов */}
-        <div style={{ flexGrow: 1, width: "100%", maxWidth: 480, paddingTop: 8, paddingBottom: 84, boxSizing: "border-box" }}>
-          <AnimatePresence mode="wait">
-            {tab === "home" && (
-              <motion.div
-                key="home"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: .7 }}
+          {/* Правые карточки */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 18, flex: 1 }}>
+            {/* Мини-кольца */}
+            <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 15, display: "flex", gap: 8, justifyContent: "center" }}>
+              <SmallRing value={summary.protein} max={kbju.protein} label="Белки" color="#5fc77f" />
+              <SmallRing value={summary.carb} max={kbju.carb} label="Углеводы" color="#3bafe8" />
+              <SmallRing value={summary.fat} max={kbju.fat} label="Жиры" color="#ffb24a" />
+            </div>
+            {/* Сегодня + кнопка добавить еду */}
+            <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: "17px 16px", textAlign: "center" }}>
+              <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: ".01em" }}>Сегодня</div>
+              <div style={{ color: "#888", fontWeight: 600, fontSize: 15, marginBottom: 10 }}>{getDayString()}</div>
+              <motion.button
+                onClick={() => setTab("calc")}
+                whileTap={{ scale: 0.95 }}
                 style={{
-                  width: "99vw", maxWidth: 480, padding: "1vw", boxSizing: "border-box"
+                  background: "linear-gradient(135deg,#3bafe8 70%,#5fc77f)", color: "#fff",
+                  fontWeight: 800, fontSize: 18, border: "none", borderRadius: 13,
+                  padding: "13px 0", width: "100%", margin: "12px 0 0 0", cursor: "pointer", boxShadow: "0 2px 12px #3bafe82a"
                 }}>
-                {/* Тут могут быть последние блюда, статистика и т.д. */}
-                <div style={{
-                  background: "#fff", borderRadius: 22, boxShadow: "0 2px 25px #e9e9f050",
-                  padding: "15px 6vw 17px 6vw", marginBottom: 10
-                }}>
-                  <div style={{ fontSize: 18, fontWeight: 750, marginBottom: 7 }}>Сегодня, {(new Date()).toLocaleDateString()}</div>
-                  <div style={{ color: "#444", fontWeight: 500, fontSize: 16, marginBottom: 6 }}>Пример добавления приёма пищи:</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", color: "#111", fontSize: 16, marginBottom: 3 }}>
-                    <span>🍳 Яичница</span><span style={{ fontWeight: 700 }}>211 г</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", color: "#111", fontSize: 16, marginBottom: 3 }}>
-                    <span>🍌 Банан</span><span style={{ fontWeight: 700 }}>90 г</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", color: "#111", fontSize: 16, marginBottom: 3 }}>
-                    <span>🥗 Салат</span><span style={{ fontWeight: 700 }}>220 г</span>
-                  </div>
+                Добавить еду
+              </motion.button>
+            </div>
+            {/* Последние блюда */}
+            <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: "15px 16px", minHeight: 110 }}>
+              <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 6 }}>Последние блюда</div>
+              {meals.length === 0 && (
+                <div style={{ color: "#aaa", fontSize: 16, marginTop: 15 }}>Пока ничего не добавлено</div>
+              )}
+              {meals.slice(-4).reverse().map((m, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 16, marginBottom: 3 }}>
+                  <span>{m.emoji || "🍽️"} {m.name}</span>
+                  <span style={{ fontWeight: 700 }}>{m.grams} г</span>
                 </div>
-              </motion.div>
-            )}
-            {tab === "food" && (
-              <motion.div
-                key="food"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: .7 }}
-                style={{
-                  background: "#fff", borderRadius: 24, padding: "32px", marginTop: 20,
-                  textAlign: "center", color: "#444", fontWeight: 700, fontSize: 21
-                }}>Здесь появится раздел "Питание"</motion.div>
-            )}
-            {tab === "train" && (
-              <motion.div
-                key="train"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: .7 }}
-                style={{
-                  background: "#fff", borderRadius: 24, padding: "32px", marginTop: 20,
-                  textAlign: "center", color: "#444", fontWeight: 700, fontSize: 21
-                }}>Раздел "Тренировки" (скоро!)</motion.div>
-            )}
-            {tab === "ai" && (
-              <motion.div
-                key="ai"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: .7 }}
-                style={{
-                  background: "#fff", borderRadius: 24, padding: "32px", marginTop: 20,
-                  textAlign: "center", color: "#444", fontWeight: 700, fontSize: 21
-                }}>AI Ассистент (скоро...)</motion.div>
-            )}
-            {tab === "settings" && (
-              <motion.div
-                key="settings"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: .7 }}
-                style={{
-                  background: "#fff", borderRadius: 24, padding: "32px", marginTop: 20,
-                  textAlign: "center", color: "#444", fontWeight: 700, fontSize: 21
-                }}>
-                <div>Настройки (скоро...)</div>
-                <div style={{ marginTop: 30, fontWeight: 600, fontSize: 16 }}>
-                  Имя в Telegram: <span style={{ color: "#2573ff" }}>{name}</span>
-                </div>
-                {/* Здесь позже можно сделать смену имени */}
-              </motion.div>
-            )}
-          </AnimatePresence>
+              ))}
+            </div>
+          </div>
         </div>
-        {/* Нижнее меню */}
-        <motion.div
-          initial={{ y: 60 }}
-          animate={{ y: 0 }}
-          transition={{ type: "spring", stiffness: 140, damping: 18, delay: .18 }}
-          style={{
-            width: "100vw", position: "fixed", left: 0, bottom: 0, background: "#fff",
-            borderTop: "1px solid #eff0f2", boxShadow: "0 -2px 12px #e9f1fe11", height: 68,
-            zIndex: 10, display: "flex"
-          }}>
-          <TabItem isActive={tab === "home"} icon={<FaHome />} label="Главная" onClick={() => setTab("home")} />
-          <TabItem isActive={tab === "food"} icon={<FaAppleAlt />} label="Питание" onClick={() => setTab("food")} />
-          <TabItem isActive={tab === "train"} icon={<FaDumbbell />} label="Тренировки" onClick={() => setTab("train")} />
-          <TabItem isActive={tab === "ai"} icon={<FaRobot />} label="ИИ" onClick={() => setTab("ai")} />
-          <TabItem isActive={tab === "settings"} icon={<FaCog />} label="Настройки" onClick={() => setTab("settings")} />
-        </motion.div>
-      </div>
+        {/* Логотип и ИИ Кнопка */}
+        <div style={{ position: "absolute", left: 24, top: 24, zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <BotLogo big />
+          <motion.button
+            whileTap={{ scale: 0.93 }}
+            style={{
+              marginTop: 17,
+              background: "linear-gradient(135deg,#5fc77f 60%,#3bafe8)", color: "#fff",
+              fontWeight: 800, fontSize: 17, border: "none", borderRadius: 11, padding: "11px 25px",
+              cursor: "pointer", boxShadow: "0 2px 12px #5fc77f2a"
+            }}
+            onClick={() => setTab("chat")}
+          >
+            ИИ Тренер
+          </motion.button>
+        </div>
+      </motion.div>
     );
   }
 
-  return null;
+  // --- Калькулятор питания ---
+  function Calculator() {
+    const [mode, setMode] = useState(calcMode);
+    const [form, setForm] = useState({ name: "", grams: "", protein: "", carb: "", fat: "", calories: "", emoji: "" });
+    const [aiQuery, setAiQuery] = useState("");
+    const [aiRes, setAiRes] = useState(null);
+
+    function handleManualAdd(e) {
+      e.preventDefault();
+      if (!form.name || !form.grams) return;
+      handleAddMeal({
+        name: form.name,
+        grams: Number(form.grams),
+        protein: Number(form.protein) || 0,
+        carb: Number(form.carb) || 0,
+        fat: Number(form.fat) || 0,
+        calories: Number(form.calories) || 0,
+        emoji: form.emoji || "🍽️"
+      });
+    }
+
+    async function handleAIAnalyze(e) {
+      e.preventDefault();
+      if (!aiQuery.trim()) return;
+      setAiLoading(true);
+      setTimeout(() => {
+        // Эмуляция ИИ анализа
+        const res = {
+          name: aiQuery,
+          grams: 300,
+          protein: 22,
+          carb: 36,
+          fat: 11,
+          calories: 350,
+          emoji: "🤖"
+        };
+        setAiRes(res);
+        setForm(res);
+        setAiLoading(false);
+      }, 1200);
+    }
+
+    return (
+      <motion.div
+        key="calc"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        style={{
+          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
+          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4"
+        }}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 18 }}>
+          <motion.button whileTap={{ scale: 0.97 }} style={{
+            flex: 1, background: mode === "manual" ? "#3bafe8" : "#f2f2f2", color: mode === "manual" ? "#fff" : "#222",
+            fontWeight: 700, border: "none", borderRadius: 12, padding: "12px 0", fontSize: 17, cursor: "pointer"
+          }} onClick={() => { setMode("manual"); setCalcMode("manual"); }}>Вручную</motion.button>
+          <motion.button whileTap={{ scale: 0.97 }} style={{
+            flex: 1, background: mode === "ai" ? "#5fc77f" : "#f2f2f2", color: mode === "ai" ? "#fff" : "#222",
+            fontWeight: 700, border: "none", borderRadius: 12, padding: "12px 0", fontSize: 17, cursor: "pointer"
+          }} onClick={() => { setMode("ai"); setCalcMode("ai"); }}>С помощью ИИ</motion.button>
+        </div>
+        {mode === "manual" && (
+          <form onSubmit={handleManualAdd} autoComplete="off" style={{
+            background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 22
+          }}>
+            <div style={{ fontSize: 21, fontWeight: 700, marginBottom: 18 }}>Добавить блюдо</div>
+            <input required placeholder="Название блюда" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={inputStyle} />
+            <input required type="number" min={1} placeholder="Граммовка" value={form.grams} onChange={e => setForm(f => ({ ...f, grams: e.target.value }))} style={inputStyle} />
+            <input type="number" placeholder="Белки, г" value={form.protein} onChange={e => setForm(f => ({ ...f, protein: e.target.value }))} style={inputStyle} />
+            <input type="number" placeholder="Углеводы, г" value={form.carb} onChange={e => setForm(f => ({ ...f, carb: e.target.value }))} style={inputStyle} />
+            <input type="number" placeholder="Жиры, г" value={form.fat} onChange={e => setForm(f => ({ ...f, fat: e.target.value }))} style={inputStyle} />
+            <input type="number" placeholder="Калории, ккал" value={form.calories} onChange={e => setForm(f => ({ ...f, calories: e.target.value }))} style={inputStyle} />
+            <input placeholder="🍽️ Эмодзи (по желанию)" value={form.emoji} maxLength={2} onChange={e => setForm(f => ({ ...f, emoji: e.target.value }))} style={inputStyle} />
+            <motion.button type="submit" whileTap={{ scale: 0.96 }} style={buttonStyle}>Добавить</motion.button>
+            <motion.button type="button" whileTap={{ scale: 0.96 }} style={{ ...buttonStyle, background: "#eee", color: "#333", marginTop: 6 }} onClick={() => setTab("home")}>Назад</motion.button>
+          </form>
+        )}
+        {mode === "ai" && (
+          <form onSubmit={handleAIAnalyze} autoComplete="off" style={{
+            background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 22
+          }}>
+            <div style={{ fontSize: 21, fontWeight: 700, marginBottom: 18 }}>Анализ с помощью ИИ</div>
+            <input required placeholder="Опишите блюдо" value={aiQuery} onChange={e => setAiQuery(e.target.value)} style={inputStyle} />
+            <motion.button type="submit" whileTap={{ scale: 0.96 }} style={buttonStyle} disabled={aiLoading}>{aiLoading ? "Анализ..." : "Проанализировать"}</motion.button>
+            {aiRes && (
+              <div style={{ background: "#f4fef7", borderRadius: 10, padding: 12, marginTop: 14 }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Результат:</div>
+                <div>Название: {aiRes.name}</div>
+                <div>Калории: {aiRes.calories} ккал</div>
+                <div>Белки: {aiRes.protein} г</div>
+                <div>Углеводы: {aiRes.carb} г</div>
+                <div>Жиры: {aiRes.fat} г</div>
+                <motion.button type="button" whileTap={{ scale: 0.96 }} style={buttonStyle} onClick={() => handleAddMeal(aiRes)}>Добавить в рацион</motion.button>
+              </div>
+            )}
+            <motion.button type="button" whileTap={{ scale: 0.96 }} style={{ ...buttonStyle, background: "#eee", color: "#333", marginTop: 9 }} onClick={() => setTab("home")}>Назад</motion.button>
+          </form>
+        )}
+      </motion.div>
+    );
+  }
+
+  // --- ИИ Тренер (чат) ---
+  function AIChat() {
+    const [input, setInput] = useState("");
+    const [pending, setPending] = useState(false);
+
+    function sendMessage(e) {
+      e.preventDefault();
+      if (!input.trim()) return;
+      setMessages(msgs => [...msgs, { sender: "user", text: input }]);
+      setInput("");
+      setPending(true);
+      setTimeout(() => {
+        setMessages(msgs => [...msgs, { sender: "ai", text: `Это ответ ИИ на: "${input}"` }]);
+        setPending(false);
+      }, 1100);
+    }
+
+    return (
+      <motion.div
+        key="ai"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        style={{
+          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
+          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4",
+          display: "flex", flexDirection: "column"
+        }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+          <BotLogo big />
+          <span style={{ fontWeight: 800, fontSize: 26, marginLeft: 12 }}>ИИ Тренер</span>
+        </div>
+        <div style={{
+          flex: 1, background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 18,
+          overflowY: "auto", marginBottom: 12, minHeight: 180
+        }}>
+          {messages.length === 0 && <div style={{ color: "#aaa", fontSize: 17 }}>Нет сообщений. Задайте вопрос ИИ тренеру!</div>}
+          {messages.map((m, idx) => (
+            <div key={idx} style={{
+              marginBottom: 13, textAlign: m.sender === "user" ? "right" : "left"
+            }}>
+              <div style={{
+                display: "inline-block", background: m.sender === "user" ? "#d7f1ff" : "#f3f6fa",
+                borderRadius: 13, padding: "8px 14px", color: "#222", fontWeight: 600,
+                maxWidth: "80%"
+              }}>{m.text}</div>
+            </div>
+          ))}
+          {pending && (
+            <div style={{ marginBottom: 8, textAlign: "left" }}>
+              <div style={{
+                display: "inline-block", background: "#f3f6fa",
+                borderRadius: 13, padding: "8px 14px", color: "#999", fontWeight: 600, opacity: 0.7
+              }}>ИИ печатает...</div>
+            </div>
+          )}
+        </div>
+        <form onSubmit={sendMessage} style={{ display: "flex", gap: 7 }}>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Введите вопрос"
+            style={{ flex: 1, borderRadius: 11, border: "1px solid #e4e4e4", padding: "11px 14px", fontSize: 17, outline: "none" }}
+            disabled={pending}
+          />
+          <motion.button type="submit" whileTap={{ scale: 0.97 }}
+            style={{
+              background: "linear-gradient(135deg,#3bafe8 70%,#5fc77f)", color: "#fff",
+              border: "none", borderRadius: 11, fontWeight: 800, fontSize: 17, padding: "0 19px", cursor: "pointer"
+            }}
+            disabled={pending}
+          >Отправить</motion.button>
+        </form>
+        <motion.button type="button" whileTap={{ scale: 0.97 }} style={{
+          background: "#eee", color: "#333", borderRadius: 11, padding: "10px 0", fontWeight: 700, fontSize: 16, border: "none", marginTop: 17
+        }} onClick={() => setTab("home")}>Назад</motion.button>
+      </motion.div>
+    );
+  }
+
+  // --- Настройки ---
+  function Settings() {
+    return (
+      <motion.div
+        key="settings"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        style={{
+          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
+          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4"
+        }}>
+        <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 22, marginBottom: 24 }}>
+          <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>Настройки профиля</div>
+          {!editName ? (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 5 }}>Имя: <span style={{ color: "#2573ff" }}>{profile.name}</span></div>
+              <motion.button whileTap={{ scale: 0.95 }} style={buttonStyle} onClick={() => setEditName(true)}>Изменить имя</motion.button>
+            </div>
+          ) : (
+            <div style={{ marginBottom: 14 }}>
+              <input
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                style={{ ...inputStyle, fontSize: 18, marginBottom: 7 }}
+                placeholder="Имя"
+              />
+              <motion.button whileTap={{ scale: 0.95 }} style={buttonStyle} onClick={handleSaveName}>Сохранить</motion.button>
+              <motion.button whileTap={{ scale: 0.95 }} style={{ ...buttonStyle, background: "#eee", color: "#333", marginTop: 7 }} onClick={() => setEditName(false)}>Отмена</motion.button>
+            </div>
+          )}
+          <motion.button whileTap={{ scale: 0.95 }} style={{ ...buttonStyle, background: "#ffedf1", color: "#d32d3b", marginTop: 18 }} onClick={handleReset}>Сбросить профиль</motion.button>
+        </div>
+        <motion.button whileTap={{ scale: 0.97 }} style={{
+          background: "#eee", color: "#333", borderRadius: 11, padding: "10px 0", fontWeight: 700, fontSize: 16, border: "none"
+        }} onClick={() => setTab("home")}>Назад</motion.button>
+      </motion.div>
+    );
+  }
+
+  // --- Блюда (история) ---
+  function MealsList() {
+    return (
+      <motion.div
+        key="meals"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        style={{
+          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
+          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4"
+        }}>
+        <div style={{ fontSize: 23, fontWeight: 800, marginBottom: 17, marginLeft: 8 }}>Все блюда за сегодня</div>
+        <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 22 }}>
+          {meals.length === 0 && <div style={{ color: "#aaa", fontSize: 17 }}>Вы ещё не добавили ни одного блюда.</div>}
+          {meals.map((m, i) => (
+            <div key={i} style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 17, borderBottom: i < meals.length-1 ? "1px solid #eee" : "none", padding: "9px 0"
+            }}>
+              <span>{m.emoji || "🍽️"} <span style={{ fontWeight: 700 }}>{m.name}</span></span>
+              <span style={{ fontWeight: 700 }}>{m.grams} г</span>
+            </div>
+          ))}
+        </div>
+        <motion.button whileTap={{ scale: 0.97 }} style={{
+          background: "#eee", color: "#333", borderRadius: 11, padding: "10px 0", fontWeight: 700, fontSize: 16, border: "none", marginTop: 22
+        }} onClick={() => setTab("home")}>Назад</motion.button>
+      </motion.div>
+    );
+  }
+
+  // --- Рендер ---
+  return (
+    <div style={{ minHeight: "100vh", background: "#f8f7f4", position: "relative" }}>
+      <AnimatePresence mode="wait">
+        {tab === "home" && <Home />}
+        {tab === "calc" && <Calculator />}
+        {tab === "chat" && <AIChat />}
+        {tab === "settings" && <Settings />}
+        {tab === "meals" && <MealsList />}
+      </AnimatePresence>
+      <motion.div
+        initial={{ y: 70 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 160, damping: 18 }}
+        style={{
+          width: "100vw", position: "fixed", left: 0, bottom: 0, background: "#fff",
+          borderTop: "1px solid #f0f0f1", boxShadow: "0 -2px 12px #e9f1fe11", height: 70,
+          zIndex: 111, display: "flex", justifyContent: "space-around", alignItems: "center"
+        }}>
+        <TabItem icon={<FaHome />} label="Главная" active={tab === "home"} onClick={() => setTab("home")} />
+        <TabItem icon={<FaAppleAlt />} label="Калькулятор" active={tab === "calc"} onClick={() => setTab("calc")} />
+        <TabItem icon={<FaRobot />} label="ИИ" active={tab === "chat"} onClick={() => setTab("chat")} />
+        <TabItem icon={<FaUtensils />} label="Блюда" active={tab === "meals"} onClick={() => setTab("meals")} />
+        <TabItem icon={<FaCog />} label="Настройки" active={tab === "settings"} onClick={() => setTab("settings")} />
+      </motion.div>
+    </div>
+  );
 }
 
-// ----- Кольцо прогресса (анимированное)
-function AnimatedRing({ percent = 0, color, size = 80, label, value, max, big }) {
+// ----- Вспомогательные компоненты -----
+
+// Кольцо калорий с логотипом внутри
+function CaloriesRing({ value, max, children }) {
+  const pct = Math.min(100, (value / max) * 100);
+  const size = 110, r = 48, c = 2 * Math.PI * r;
   return (
-    <motion.div
-      initial={{ scale: 0.85, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: .7, delay: big ? .13 : 0 }}
-      style={{
+    <div style={{ position: "relative", width: size, height: size, marginBottom: 8 }}>
+      <svg width={size} height={size}>
+        <circle r={r} cx={size/2} cy={size/2} stroke="#f2f2f2" strokeWidth={10} fill="none" />
+        <motion.circle
+          r={r} cx={size/2} cy={size/2}
+          fill="none" stroke="#ff4941" strokeWidth={13}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c - (c * pct / 100)}
+          animate={{ strokeDashoffset: c - (c * pct / 100) }}
+          transition={{ duration: .7 }}
+        />
+      </svg>
+      <div style={{
+        position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)",
         display: "flex", flexDirection: "column", alignItems: "center"
-      }}
-    >
-      <Ring percent={percent} color={color} size={size} bgcolor="#f4f4f4" />
-      <span style={{
-        fontWeight: big ? 800 : 700,
-        fontSize: big ? 26 : 15,
-        marginTop: big ? -size * 0.47 : -size * 0.35,
-        color: color,
-        textShadow: big ? "0 1px 7px #fff9" : "none"
-      }}>{value}/{max}</span>
-      <span style={{
-        fontWeight: 500,
-        fontSize: big ? 15 : 13,
-        color: "#666",
-        marginBottom: big ? 0 : 1
-      }}>{label}</span>
-    </motion.div>
-  );
-}
-
-// ----- Кольцо прогресса SVG
-function Ring({ percent = 0, color = "#2573ff", size = 80, bgcolor = "#ebebf5" }) {
-  const r = size * 0.46, c = 2 * Math.PI * r;
-  return (
-    <svg width={size} height={size} style={{ display: "block" }}>
-      <circle r={r} cx={size / 2} cy={size / 2} fill="none" stroke={bgcolor} strokeWidth={size * 0.11} />
-      <motion.circle
-        r={r} cx={size / 2} cy={size / 2}
-        fill="none" stroke={color} strokeWidth={size * 0.13}
-        strokeLinecap="round"
-        strokeDasharray={c}
-        strokeDashoffset={c - (c * percent / 100)}
-        style={{ transition: ".7s stroke-dashoffset cubic-bezier(.48,.31,.4,.86)" }}
-        animate={{ strokeDashoffset: c - (c * percent / 100) }}
-        transition={{ duration: .7 }}
-      />
-    </svg>
-  );
-}
-
-// ----- Анимированная иконка Apple/Спиннер
-function AppleSpinner() {
-  return (
-    <motion.div
-      animate={{ rotate: 360 }}
-      transition={{ repeat: Infinity, duration: 1.4, ease: "linear" }}
-      style={{
-        width: 86, height: 86, marginBottom: 12, position: "relative"
-      }}
-    >
-      <svg width={86} height={86}>
-        <circle cx={43} cy={43} r={37} stroke="#6CCF83" strokeWidth={9} fill="none"
-          strokeDasharray="90 90" strokeLinecap="round" />
-        <circle cx={43} cy={43} r={28} stroke="#68e0cf" strokeWidth={8} fill="none"
-          strokeDasharray="40 58" strokeLinecap="round" />
-      </svg>
-      <svg width={26} height={26} style={{
-        position: "absolute", left: 30, top: 30
       }}>
-        <path d="M17.2 8.8C16.7 8.2 15.8 7.8 14.8 7.8c-1.2 0-2.3.8-3 1.6-.7.8-1.1 1.7-1.1 2.7 0 1.1.3 2.1.8 2.8.4.5 1 .8 1.9.8 1.2 0 2.3-.8 3-1.6.7-.8 1.1-1.7 1.1-2.7 0-1.2-.3-2.1-.8-2.8z" fill="#222" />
-      </svg>
-    </motion.div>
+        {children}
+      </div>
+    </div>
   );
 }
 
-// ----- Печатающийся текст
-function TypingText({ text, style }) {
-  return <span style={style}>{text}<span style={{ opacity: .5, fontWeight: 800 }}>|</span></span>;
+// Маленькое кольцо для макроэлементов
+function SmallRing({ value, max, label, color }) {
+  const pct = Math.min(100, (value / max) * 100);
+  const size = 46, r = 18, c = 2 * Math.PI * r;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 55 }}>
+      <svg width={size} height={size}>
+        <circle r={r} cx={size/2} cy={size/2} stroke="#f2f2f2" strokeWidth={6} fill="none" />
+        <motion.circle
+          r={r} cx={size/2} cy={size/2}
+          fill="none" stroke={color} strokeWidth={7}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c - (c * pct / 100)}
+          animate={{ strokeDashoffset: c - (c * pct / 100) }}
+          transition={{ duration: .7 }}
+        />
+      </svg>
+      <div style={{ fontWeight: 800, fontSize: 15, color: color, marginTop: -32 }}>{value}</div>
+      <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>{label}</div>
+    </div>
+  );
 }
 
-// ----- Нижнее меню (иконки)
-function TabItem({ isActive, icon, label, onClick }) {
+// Прогресс-бар макроэлементов
+function MacroBar({ label, value, max, color }) {
+  const pct = Math.min(100, (value / max) * 100);
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 2 }}>
+        <span>{label}</span>
+        <span style={{ fontWeight: 600 }}>{value} / {max} г</span>
+      </div>
+      <div style={{ background: "#f0f0f0", borderRadius: 7, height: 8, width: "100%" }}>
+        <div style={{
+          background: color, height: 8, borderRadius: 7, width: `${pct}%`, transition: ".47s"
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// Логотип бота
+function BotLogo({ big }) {
+  return (
+    <div style={{
+      width: big ? 43 : 28, height: big ? 43 : 28, background: "#3bafe8",
+      borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px #3bafe822"
+    }}>
+      <PiBowlFoodFill color="#fff" size={big ? 29 : 19} />
+    </div>
+  );
+}
+
+// Кнопка нижнего меню
+function TabItem({ icon, label, active, onClick }) {
   return (
     <motion.div
-      whileTap={{ scale: 0.88 }}
+      whileTap={{ scale: 0.86 }}
       onClick={onClick}
       style={{
-        flex: "1 1 0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        fontWeight: 700, fontSize: 17, cursor: "pointer", color: isActive ? "#2573ff" : "#a2a5af",
-        padding: "5px 0", transition: ".2s color", position: "relative"
+        flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        fontWeight: 700, fontSize: 15, cursor: "pointer", color: active ? "#3bafe8" : "#b4b4b4"
       }}>
       <span style={{ fontSize: 26, marginBottom: 2 }}>{icon}</span>
       <div style={{ fontSize: 13, marginTop: "-2px", letterSpacing: ".01em" }}>{label}</div>
-      <AnimatePresence>
-        {isActive && (
-          <motion.div
-            layoutId="tab-underline"
-            initial={{ opacity: 0, scaleX: 0.8 }}
-            animate={{ opacity: 1, scaleX: 1 }}
-            exit={{ opacity: 0, scaleX: 0.8 }}
-            transition={{ duration: .3 }}
-            style={{
-              marginTop: 4, width: 26, height: 3, borderRadius: 2, background: "#2573ff",
-              boxShadow: "0 1.5px 6px #a9d4ff55"
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {active && (
+        <motion.div
+          layoutId="tab-underline"
+          initial={{ opacity: 0, scaleX: 0.8 }}
+          animate={{ opacity: 1, scaleX: 1 }}
+          exit={{ opacity: 0, scaleX: 0.8 }}
+          transition={{ duration: .3 }}
+          style={{
+            marginTop: 3, width: 22, height: 3, borderRadius: 2, background: "#3bafe8",
+            boxShadow: "0 1.5px 6px #a9d4ff55"
+          }}
+        />
+      )}
     </motion.div>
   );
 }
+
+// Стили для инпутов и кнопок
+const inputStyle = {
+  width: "100%",
+  border: "1.5px solid #e2e7ea",
+  borderRadius: 10,
+  padding: "11px 13px",
+  fontSize: 16,
+  marginBottom: 10,
+  outline: "none",
+  fontWeight: 600,
+  color: "#222",
+  background: "#f8f9fb"
+};
+
+const buttonStyle = {
+  width: "100%",
+  background: "linear-gradient(135deg,#3bafe8 70%,#5fc77f)",
+  color: "#fff",
+  fontWeight: 800,
+  fontSize: 17,
+  border: "none",
+  borderRadius: 11,
+  padding: "13px 0",
+  marginTop: 10,
+  cursor: "pointer",
+  boxShadow: "0 2px 12px #3bafe82a"
+};
 
 export default App;
