@@ -122,7 +122,12 @@ function App() {
                   }}
                   autoFocus
                   required
-                  onKeyDown={e=>{if(e.key==="Enter")e.target.blur()}}
+                  onKeyDown={e => {
+  if (e.key === "Enter" && name.trim()) {
+    e.preventDefault(); // предотвращает отправку формы
+    setStage("onboard"); // переходит на следующий этап
+  }
+}}
                   />
                 <button type="submit"
                   style={{width:"100%",padding:"16px 0",fontWeight:800,fontSize:20,
