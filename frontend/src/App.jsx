@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaHome, FaAppleAlt, FaDumbbell, FaRobot, FaCog, FaBolt, FaUtensils } from "react-icons/fa";
+import { FaHome, FaAppleAlt, FaRobot, FaUtensils, FaCog } from "react-icons/fa";
 import { PiBowlFoodFill } from "react-icons/pi";
+
 import {
   CalculatorMobile,
   AIChatMobile,
@@ -46,456 +47,334 @@ const defaultProfile = {
   weight: 75,
   activity: 1.375,
   goal: "maintain",
-  name: "Пользователь",
+  name: "",
+};
+
+const initialMealsByType = {
+  breakfast: [],
+  lunch: [],
+  dinner: [],
+  snack: [],
 };
 
 // --------- Главный компонент ---------
 function App() {
-  // --- Навигация ---
+  const [stage, setStage] = useState("splash"); // splash, welcome, app
   const [tab, setTab] = useState("home"); // home, calc, chat, meals, settings
-
-  // --- Профиль пользователя ---
   const [profile, setProfile] = useState(defaultProfile);
 
-  // --- Цели КБЖУ ---
+  // Имя Telegram
+  const [telegramName, setTelegramName] = useState("");
+  useEffect(() => {
+    if (
+      window.Telegram &&
+      window.Telegram.WebApp &&
+      window.Telegram.WebApp.initDataUnsafe?.user?.first_name
+    ) {
+      setTelegramName(window.Telegram.WebApp.initDataUnsafe.user.first_name);
+    }
+  }, []);
+
+  // Splash (загрузка)
+  useEffect(() => {
+    if (stage === "splash") {
+      setTimeout(() => setStage("welcome"), 1700);
+    }
+  }, [stage]);
+
+  // Welcome (приветствие)
+  const [typed, setTyped] = useState("");
+  useEffect(() => {
+    if (stage === "welcome") {
+      const name = telegramName || "друг";
+      const full = `Добро пожаловать, ${name}!`;
+      setTyped("");
+      let i = 0;
+      const typing = setInterval(() => {
+        setTyped(txt => {
+          if (i < full.length) {
+            i++;
+            return full.slice(0, i);
+          } else {
+            clearInterval(typing);
+            return full;
+          }
+        });
+      }, 34);
+      return () => clearInterval(typing);
+    }
+  }, [stage, telegramName]);
+
+  // При инициализации профиля
+  useEffect(() => {
+    if (stage === "welcome" && telegramName && !profile.name) {
+      setProfile(p => ({ ...p, name: telegramName }));
+    }
+  }, [stage, telegramName, profile.name]);
+
+  // Цели КБЖУ
   const kbju = getKBJU(profile);
 
-  // --- Состояние приёмов пищи ---
-  const [meals, setMeals] = useState([
-    // { name: "Лосось", grams: 470, protein: 30, carb: 2, fat: 16, calories: 210, emoji: "🐟" }
-  ]);
+  // Состояние приёмов пищи по типу
+  const [mealsByType, setMealsByType] = useState(initialMealsByType);
 
-  // --- Итог за день ---
-  const summary = meals.reduce(
+  // Все приёмы в плоском виде для истории/главной
+  const allMeals = [
+    ...mealsByType.breakfast.map(m => ({ ...m, type: "breakfast" })),
+    ...mealsByType.lunch.map(m => ({ ...m, type: "lunch" })),
+    ...mealsByType.dinner.map(m => ({ ...m, type: "dinner" })),
+    ...mealsByType.snack.map(m => ({ ...m, type: "snack" })),
+  ];
+
+  // Итог за день
+  const summary = allMeals.reduce(
     (acc, m) => ({
       calories: acc.calories + (m.calories || 0),
       protein: acc.protein + (m.protein || 0),
       carb: acc.carb + (m.carb || 0),
-      fat: acc.fat + (m.fat || 0),
+      fat: acc.fat + (m.fat || 0)
     }),
     { calories: 0, protein: 0, carb: 0, fat: 0 }
   );
 
-  // --- Состояние чата ---
-  const [messages, setMessages] = useState([
-    // { sender: "ai", text: "Привет! Я ваш ИИ тренер." }
-  ]);
+  // Состояние чата
+  const [messages, setMessages] = useState([]);
 
-  // --- Экран калькулятора: ручной или ИИ ---
-  const [calcMode, setCalcMode] = useState("manual"); // manual, ai
-  const [aiLoading, setAiLoading] = useState(false);
-
-  // --- Для смены имени в настройках ---
+  // Для смены имени в настройках
   const [editName, setEditName] = useState(false);
   const [newName, setNewName] = useState(profile.name);
 
-  // --- Анимация блоков ---
-  const pageVariants = {
-    initial: { opacity: 0, y: 30 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -30 },
-  };
+  // Для калькулятора питания
+  const [calcType, setCalcType] = useState("breakfast"); // breakfast, lunch, dinner, snack
+  const [calcMode, setCalcMode] = useState("manual"); // manual, ai
+  const [aiLoading, setAiLoading] = useState(false);
 
-  // --- Добавление еды вручную или с помощью ИИ ---
-  function handleAddMeal(meal) {
-    setMeals([...meals, meal]);
-    setTab("home");
-  }
-
-  // --- Сброс профиля ---
-  function handleReset() {
-    setProfile(defaultProfile);
-    setMeals([]);
-    setMessages([]);
-    setTab("home");
-  }
-
-  // --- Обновить имя пользователя ---
-  function handleSaveName() {
-    setProfile({ ...profile, name: newName.trim() || profile.name });
-    setEditName(false);
-  }
-
-  // --- UI: Главная страница ---
-  function Home() {
+  // --------- Splash ---------
+  if (stage === "splash") {
     return (
-      <motion.div
-        key="home"
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        style={{
-          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
-          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4"
-        }}
-      >
-        <div style={{ display: "flex", gap: 18, justifyContent: "flex-start", alignItems: "flex-start" }}>
-          {/* Кольцо калорий с логотипом */}
-          <div style={{ background: "#fff", borderRadius: 22, boxShadow: "0 2px 16px #e6e6e6", padding: 22, width: 170, minHeight: 220, display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <CaloriesRing value={summary.calories} max={kbju.calories}>
-              <BotLogo />
-            </CaloriesRing>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#888", marginTop: 8, marginBottom: 10 }}>КАЛОРИИ</div>
-            <div style={{ fontWeight: 800, fontSize: 34, marginTop: -90, color: "#222" }}>{summary.calories}</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#b9b9b9", marginBottom: 18 }}>{kbju.calories} ккал цель</div>
-            <div style={{ width: "100%", marginTop: 15 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#3b3b3b", marginBottom: 5 }}>Обзор</div>
-              <MacroBar label="Углеводы" value={summary.carb} max={kbju.carb} color="#3bafe8" />
-              <MacroBar label="Белки" value={summary.protein} max={kbju.protein} color="#5fc77f" />
-              <MacroBar label="Жиры" value={summary.fat} max={kbju.fat} color="#ffb24a" />
-            </div>
-          </div>
-          {/* Правые карточки */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 18, flex: 1 }}>
-            {/* Мини-кольца */}
-            <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 15, display: "flex", gap: 8, justifyContent: "center" }}>
-              <SmallRing value={summary.protein} max={kbju.protein} label="Белки" color="#5fc77f" />
-              <SmallRing value={summary.carb} max={kbju.carb} label="Углеводы" color="#3bafe8" />
-              <SmallRing value={summary.fat} max={kbju.fat} label="Жиры" color="#ffb24a" />
-            </div>
-            {/* Сегодня + кнопка добавить еду */}
-            <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: "17px 16px", textAlign: "center" }}>
-              <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: ".01em" }}>Сегодня</div>
-              <div style={{ color: "#888", fontWeight: 600, fontSize: 15, marginBottom: 10 }}>{getDayString()}</div>
-              <motion.button
-                onClick={() => setTab("calc")}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  background: "linear-gradient(135deg,#3bafe8 70%,#5fc77f)", color: "#fff",
-                  fontWeight: 800, fontSize: 18, border: "none", borderRadius: 13,
-                  padding: "13px 0", width: "100%", margin: "12px 0 0 0", cursor: "pointer", boxShadow: "0 2px 12px #3bafe82a"
-                }}>
-                Добавить еду
-              </motion.button>
-            </div>
-            {/* Последние блюда */}
-            <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: "15px 16px", minHeight: 110 }}>
-              <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 6 }}>Последние блюда</div>
-              {meals.length === 0 && (
-                <div style={{ color: "#aaa", fontSize: 16, marginTop: 15 }}>Пока ничего не добавлено</div>
-              )}
-              {meals.slice(-4).reverse().map((m, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 16, marginBottom: 3 }}>
-                  <span>{m.emoji || "🍽️"} {m.name}</span>
-                  <span style={{ fontWeight: 700 }}>{m.grams} г</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        {/* Логотип и ИИ Кнопка */}
-        <div style={{ position: "absolute", left: 24, top: 24, zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <BotLogo big />
-          <motion.button
-            whileTap={{ scale: 0.93 }}
-            style={{
-              marginTop: 17,
-              background: "linear-gradient(135deg,#5fc77f 60%,#3bafe8)", color: "#fff",
-              fontWeight: 800, fontSize: 17, border: "none", borderRadius: 11, padding: "11px 25px",
-              cursor: "pointer", boxShadow: "0 2px 12px #5fc77f2a"
-            }}
-            onClick={() => setTab("chat")}
-          >
-            ИИ Тренер
-          </motion.button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  // --- Калькулятор питания ---
-  function Calculator() {
-    const [mode, setMode] = useState(calcMode);
-    const [form, setForm] = useState({ name: "", grams: "", protein: "", carb: "", fat: "", calories: "", emoji: "" });
-    const [aiQuery, setAiQuery] = useState("");
-    const [aiRes, setAiRes] = useState(null);
-
-    function handleManualAdd(e) {
-      e.preventDefault();
-      if (!form.name || !form.grams) return;
-      handleAddMeal({
-        name: form.name,
-        grams: Number(form.grams),
-        protein: Number(form.protein) || 0,
-        carb: Number(form.carb) || 0,
-        fat: Number(form.fat) || 0,
-        calories: Number(form.calories) || 0,
-        emoji: form.emoji || "🍽️"
-      });
-    }
-
-    async function handleAIAnalyze(e) {
-      e.preventDefault();
-      if (!aiQuery.trim()) return;
-      setAiLoading(true);
-      setTimeout(() => {
-        // Эмуляция ИИ анализа
-        const res = {
-          name: aiQuery,
-          grams: 300,
-          protein: 22,
-          carb: 36,
-          fat: 11,
-          calories: 350,
-          emoji: "🤖"
-        };
-        setAiRes(res);
-        setForm(res);
-        setAiLoading(false);
-      }, 1200);
-    }
-
-    return (
-      <motion.div
-        key="calc"
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        style={{
-          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
-          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4"
-        }}>
-        <div style={{ display: "flex", gap: 12, marginBottom: 18 }}>
-          <motion.button whileTap={{ scale: 0.97 }} style={{
-            flex: 1, background: mode === "manual" ? "#3bafe8" : "#f2f2f2", color: mode === "manual" ? "#fff" : "#222",
-            fontWeight: 700, border: "none", borderRadius: 12, padding: "12px 0", fontSize: 17, cursor: "pointer"
-          }} onClick={() => { setMode("manual"); setCalcMode("manual"); }}>Вручную</motion.button>
-          <motion.button whileTap={{ scale: 0.97 }} style={{
-            flex: 1, background: mode === "ai" ? "#5fc77f" : "#f2f2f2", color: mode === "ai" ? "#fff" : "#222",
-            fontWeight: 700, border: "none", borderRadius: 12, padding: "12px 0", fontSize: 17, cursor: "pointer"
-          }} onClick={() => { setMode("ai"); setCalcMode("ai"); }}>С помощью ИИ</motion.button>
-        </div>
-        {mode === "manual" && (
-          <form onSubmit={handleManualAdd} autoComplete="off" style={{
-            background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 22
-          }}>
-            <div style={{ fontSize: 21, fontWeight: 700, marginBottom: 18 }}>Добавить блюдо</div>
-            <input required placeholder="Название блюда" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={inputStyle} />
-            <input required type="number" min={1} placeholder="Граммовка" value={form.grams} onChange={e => setForm(f => ({ ...f, grams: e.target.value }))} style={inputStyle} />
-            <input type="number" placeholder="Белки, г" value={form.protein} onChange={e => setForm(f => ({ ...f, protein: e.target.value }))} style={inputStyle} />
-            <input type="number" placeholder="Углеводы, г" value={form.carb} onChange={e => setForm(f => ({ ...f, carb: e.target.value }))} style={inputStyle} />
-            <input type="number" placeholder="Жиры, г" value={form.fat} onChange={e => setForm(f => ({ ...f, fat: e.target.value }))} style={inputStyle} />
-            <input type="number" placeholder="Калории, ккал" value={form.calories} onChange={e => setForm(f => ({ ...f, calories: e.target.value }))} style={inputStyle} />
-            <input placeholder="🍽️ Эмодзи (по желанию)" value={form.emoji} maxLength={2} onChange={e => setForm(f => ({ ...f, emoji: e.target.value }))} style={inputStyle} />
-            <motion.button type="submit" whileTap={{ scale: 0.96 }} style={buttonStyle}>Добавить</motion.button>
-            <motion.button type="button" whileTap={{ scale: 0.96 }} style={{ ...buttonStyle, background: "#eee", color: "#333", marginTop: 6 }} onClick={() => setTab("home")}>Назад</motion.button>
-          </form>
-        )}
-        {mode === "ai" && (
-          <form onSubmit={handleAIAnalyze} autoComplete="off" style={{
-            background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 22
-          }}>
-            <div style={{ fontSize: 21, fontWeight: 700, marginBottom: 18 }}>Анализ с помощью ИИ</div>
-            <input required placeholder="Опишите блюдо" value={aiQuery} onChange={e => setAiQuery(e.target.value)} style={inputStyle} />
-            <motion.button type="submit" whileTap={{ scale: 0.96 }} style={buttonStyle} disabled={aiLoading}>{aiLoading ? "Анализ..." : "Проанализировать"}</motion.button>
-            {aiRes && (
-              <div style={{ background: "#f4fef7", borderRadius: 10, padding: 12, marginTop: 14 }}>
-                <div style={{ fontWeight: 700, marginBottom: 6 }}>Результат:</div>
-                <div>Название: {aiRes.name}</div>
-                <div>Калории: {aiRes.calories} ккал</div>
-                <div>Белки: {aiRes.protein} г</div>
-                <div>Углеводы: {aiRes.carb} г</div>
-                <div>Жиры: {aiRes.fat} г</div>
-                <motion.button type="button" whileTap={{ scale: 0.96 }} style={buttonStyle} onClick={() => handleAddMeal(aiRes)}>Добавить в рацион</motion.button>
-              </div>
-            )}
-            <motion.button type="button" whileTap={{ scale: 0.96 }} style={{ ...buttonStyle, background: "#eee", color: "#333", marginTop: 9 }} onClick={() => setTab("home")}>Назад</motion.button>
-          </form>
-        )}
-      </motion.div>
-    );
-  }
-
-  // --- ИИ Тренер (чат) ---
-  function AIChat() {
-    const [input, setInput] = useState("");
-    const [pending, setPending] = useState(false);
-
-    function sendMessage(e) {
-      e.preventDefault();
-      if (!input.trim()) return;
-      setMessages(msgs => [...msgs, { sender: "user", text: input }]);
-      setInput("");
-      setPending(true);
-      setTimeout(() => {
-        setMessages(msgs => [...msgs, { sender: "ai", text: `Это ответ ИИ на: "${input}"` }]);
-        setPending(false);
-      }, 1100);
-    }
-
-    return (
-      <motion.div
-        key="ai"
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        style={{
-          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
-          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4",
-          display: "flex", flexDirection: "column"
-        }}>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-          <BotLogo big />
-          <span style={{ fontWeight: 800, fontSize: 26, marginLeft: 12 }}>ИИ Тренер</span>
-        </div>
+      <div style={{
+        minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#eef5fe 30%,#dffcf9 90%)",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
+      }}>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+          style={{ width: 77, height: 77, marginBottom: 12 }}
+        >
+          <svg width={77} height={77}>
+            <circle cx={38.5} cy={38.5} r={33} stroke="#3baef2" strokeWidth={8} fill="none" strokeDasharray="80 90" strokeLinecap="round" />
+            <circle cx={38.5} cy={38.5} r={24} stroke="#68e0cf" strokeWidth={7} fill="none" strokeDasharray="38 50" strokeLinecap="round" />
+          </svg>
+          <svg width={22} height={22} style={{ position: "absolute", left: 28, top: 28 }}>
+            <path d="M15.2 7.8C14.7 7.2 13.8 6.8 12.8 6.8c-1.2 0-2.3.8-3 1.6-.7.8-1.1 1.7-1.1 2.7 0 1.1.3 2.1.8 2.8.4.5 1 .8 1.9.8 1.2 0 2.3-.8 3-1.6.7-.8 1.1-1.7 1.1-2.7 0-1.2-.3-2.1-.8-2.8z" fill="#229ED9" />
+          </svg>
+        </motion.div>
         <div style={{
-          flex: 1, background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 18,
-          overflowY: "auto", marginBottom: 12, minHeight: 180
+          fontSize: 26, color: "#229ED9", fontWeight: 800, letterSpacing: ".01em", marginTop: 15
         }}>
-          {messages.length === 0 && <div style={{ color: "#aaa", fontSize: 17 }}>Нет сообщений. Задайте вопрос ИИ тренеру!</div>}
-          {messages.map((m, idx) => (
-            <div key={idx} style={{
-              marginBottom: 13, textAlign: m.sender === "user" ? "right" : "left"
-            }}>
-              <div style={{
-                display: "inline-block", background: m.sender === "user" ? "#d7f1ff" : "#f3f6fa",
-                borderRadius: 13, padding: "8px 14px", color: "#222", fontWeight: 600,
-                maxWidth: "80%"
-              }}>{m.text}</div>
-            </div>
-          ))}
-          {pending && (
-            <div style={{ marginBottom: 8, textAlign: "left" }}>
-              <div style={{
-                display: "inline-block", background: "#f3f6fa",
-                borderRadius: 13, padding: "8px 14px", color: "#999", fontWeight: 600, opacity: 0.7
-              }}>ИИ печатает...</div>
-            </div>
-          )}
+          SmartFitness AI
         </div>
-        <form onSubmit={sendMessage} style={{ display: "flex", gap: 7 }}>
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            placeholder="Введите вопрос"
-            style={{ flex: 1, borderRadius: 11, border: "1px solid #e4e4e4", padding: "11px 14px", fontSize: 17, outline: "none" }}
-            disabled={pending}
-          />
-          <motion.button type="submit" whileTap={{ scale: 0.97 }}
+        <div style={{ marginTop: 19, fontSize: 17, color: "#7dbbf3", fontWeight: 600, letterSpacing: ".02em" }}>Загрузка...</div>
+      </div>
+    );
+  }
+
+  // --------- Welcome ---------
+  if (stage === "welcome") {
+    return (
+      <div style={{
+        minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#f3f7fa 10%,#f2fff6 90%)",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
+      }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8 }}
+          style={{
+            padding: "32px 16px 28px 16px", background: "#fff", borderRadius: 27,
+            boxShadow: "0 4px 38px #ddeff940", width: "89vw", maxWidth: 390, minHeight: 230,
+            display: "flex", flexDirection: "column", alignItems: "center"
+          }}>
+          <div style={{
+            width: 60, height: 60, background: "#229ED9", borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14
+          }}>
+            <PiBowlFoodFill color="#fff" size={36} />
+          </div>
+          <span style={{
+            fontSize: 25, fontWeight: 800, color: "#1d3557",
+            minHeight: 35, marginBottom: 22, marginTop: 3, letterSpacing: ".01em"
+          }}>
+            {typed}<span style={{ opacity: .5, fontWeight: 900 }}>|</span>
+          </span>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             style={{
-              background: "linear-gradient(135deg,#3bafe8 70%,#5fc77f)", color: "#fff",
-              border: "none", borderRadius: 11, fontWeight: 800, fontSize: 17, padding: "0 19px", cursor: "pointer"
+              marginTop: 7,
+              background: "linear-gradient(135deg,#229ED9 70%,#53ddc9)", color: "#fff",
+              fontWeight: 800, fontSize: 18, border: "none", borderRadius: 13,
+              padding: "13px 45px", margin: "9px 0 0 0", cursor: "pointer", boxShadow: "0 2px 12px #3bafe82a"
             }}
-            disabled={pending}
-          >Отправить</motion.button>
-        </form>
-        <motion.button type="button" whileTap={{ scale: 0.97 }} style={{
-          background: "#eee", color: "#333", borderRadius: 11, padding: "10px 0", fontWeight: 700, fontSize: 16, border: "none", marginTop: 17
-        }} onClick={() => setTab("home")}>Назад</motion.button>
-      </motion.div>
+            onClick={() => setStage("app")}
+          >
+            Начать
+          </motion.button>
+        </motion.div>
+      </div>
     );
   }
 
-  // --- Настройки ---
-  function Settings() {
-    return (
-      <motion.div
-        key="settings"
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        style={{
-          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
-          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4"
-        }}>
-        <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 22, marginBottom: 24 }}>
-          <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>Настройки профиля</div>
-          {!editName ? (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 5 }}>Имя: <span style={{ color: "#2573ff" }}>{profile.name}</span></div>
-              <motion.button whileTap={{ scale: 0.95 }} style={buttonStyle} onClick={() => setEditName(true)}>Изменить имя</motion.button>
-            </div>
-          ) : (
-            <div style={{ marginBottom: 14 }}>
-              <input
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                style={{ ...inputStyle, fontSize: 18, marginBottom: 7 }}
-                placeholder="Имя"
-              />
-              <motion.button whileTap={{ scale: 0.95 }} style={buttonStyle} onClick={handleSaveName}>Сохранить</motion.button>
-              <motion.button whileTap={{ scale: 0.95 }} style={{ ...buttonStyle, background: "#eee", color: "#333", marginTop: 7 }} onClick={() => setEditName(false)}>Отмена</motion.button>
-            </div>
-          )}
-          <motion.button whileTap={{ scale: 0.95 }} style={{ ...buttonStyle, background: "#ffedf1", color: "#d32d3b", marginTop: 18 }} onClick={handleReset}>Сбросить профиль</motion.button>
-        </div>
-        <motion.button whileTap={{ scale: 0.97 }} style={{
-          background: "#eee", color: "#333", borderRadius: 11, padding: "10px 0", fontWeight: 700, fontSize: 16, border: "none"
-        }} onClick={() => setTab("home")}>Назад</motion.button>
-      </motion.div>
-    );
-  }
-
-  // --- Блюда (история) ---
-  function MealsList() {
-    return (
-      <motion.div
-        key="meals"
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        style={{
-          width: "100%", maxWidth: 450, margin: "0 auto", padding: "30px 0 70px 0",
-          minHeight: "calc(100vh - 70px)", boxSizing: "border-box", background: "#f8f7f4"
-        }}>
-        <div style={{ fontSize: 23, fontWeight: 800, marginBottom: 17, marginLeft: 8 }}>Все блюда за сегодня</div>
-        <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 16px #e6e6e6", padding: 22 }}>
-          {meals.length === 0 && <div style={{ color: "#aaa", fontSize: 17 }}>Вы ещё не добавили ни одного блюда.</div>}
-          {meals.map((m, i) => (
-            <div key={i} style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 17, borderBottom: i < meals.length-1 ? "1px solid #eee" : "none", padding: "9px 0"
-            }}>
-              <span>{m.emoji || "🍽️"} <span style={{ fontWeight: 700 }}>{m.name}</span></span>
-              <span style={{ fontWeight: 700 }}>{m.grams} г</span>
-            </div>
-          ))}
-        </div>
-        <motion.button whileTap={{ scale: 0.97 }} style={{
-          background: "#eee", color: "#333", borderRadius: 11, padding: "10px 0", fontWeight: 700, fontSize: 16, border: "none", marginTop: 22
-        }} onClick={() => setTab("home")}>Назад</motion.button>
-      </motion.div>
-    );
-  }
-
-  // --- Рендер ---
+  // --------- Приложение ---------
   return (
-    <div style={{ minHeight: "100vh", background: "#f8f7f4", position: "relative" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#fafbfc",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 70px)",
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
+      }}
+    >
       <AnimatePresence mode="wait">
-        {tab === "home" && <Home />}
-        {tab === "calc" && <Calculator />}
-        {tab === "chat" && <AIChat />}
-        {tab === "settings" && <Settings />}
-        {tab === "meals" && <MealsList />}
+        {tab === "home" && (
+          <HomeMobile
+            profile={profile}
+            kbju={kbju}
+            summary={summary}
+            allMeals={allMeals}
+            onGoToChat={() => setTab("chat")}
+            onGoToCalc={() => setTab("calc")}
+          />
+        )}
+        {tab === "calc" && (
+          <CalculatorMobile
+            kbju={kbju}
+            mealsByType={mealsByType}
+            setMealsByType={setMealsByType}
+            calcType={calcType}
+            setCalcType={setCalcType}
+            calcMode={calcMode}
+            setCalcMode={setCalcMode}
+            aiLoading={aiLoading}
+            setAiLoading={setAiLoading}
+            onBack={() => setTab("home")}
+          />
+        )}
+        {tab === "chat" && (
+          <AIChatMobile
+            messages={messages}
+            setMessages={setMessages}
+            onBack={() => setTab("home")}
+            username={profile.name}
+          />
+        )}
+        {tab === "settings" && (
+          <SettingsMobile
+            profile={profile}
+            setProfile={setProfile}
+            editName={editName}
+            setEditName={setEditName}
+            newName={newName}
+            setNewName={setNewName}
+            onBack={() => setTab("home")}
+          />
+        )}
+        {tab === "meals" && (
+          <MealsMobile
+            mealsByType={mealsByType}
+            onBack={() => setTab("home")}
+          />
+        )}
       </AnimatePresence>
-      <motion.div
-        initial={{ y: 70 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 160, damping: 18 }}
-        style={{
-          width: "100vw", position: "fixed", left: 0, bottom: 0, background: "#fff",
-          borderTop: "1px solid #f0f0f1", boxShadow: "0 -2px 12px #e9f1fe11", height: 70,
-          zIndex: 111, display: "flex", justifyContent: "space-around", alignItems: "center"
-        }}>
-        <TabItem icon={<FaHome />} label="Главная" active={tab === "home"} onClick={() => setTab("home")} />
-        <TabItem icon={<FaAppleAlt />} label="Калькулятор" active={tab === "calc"} onClick={() => setTab("calc")} />
-        <TabItem icon={<FaRobot />} label="ИИ" active={tab === "chat"} onClick={() => setTab("chat")} />
-        <TabItem icon={<FaUtensils />} label="Блюда" active={tab === "meals"} onClick={() => setTab("meals")} />
-        <TabItem icon={<FaCog />} label="Настройки" active={tab === "settings"} onClick={() => setTab("settings")} />
-      </motion.div>
+      <MobileMenu tab={tab} setTab={setTab} />
     </div>
   );
 }
 
-// ----- Вспомогательные компоненты -----
+// ----------- Мобильные компоненты ----------
+
+function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }}
+      transition={{ duration: .6 }}
+      style={{ maxWidth: 530, margin: "0 auto", padding: "15px 0 0 0", position: "relative" }}
+    >
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 18px 7px 18px", marginBottom: 2
+      }}>
+        <div style={{ fontWeight: 800, fontSize: 19, color: "#1e222c" }}>SmartFitness AI</div>
+        <div style={{ fontSize: 14, color: "#b5b5b5", fontWeight: 600 }}>мини-приложение</div>
+      </div>
+      <div style={{
+        display: "flex", flexDirection: "row", gap: 11, alignItems: "flex-start",
+        padding: "0 10px"
+      }}>
+        <div style={{
+          background: "#fff", borderRadius: 22, boxShadow: "0 2px 14px #ececec",
+          padding: "16px 11px 18px 11px", minWidth: 0, minHeight: 280, flex: "1 0 0", position: "relative", display: "flex", flexDirection: "column", alignItems: "center"
+        }}>
+          <CaloriesRing value={summary.calories} max={kbju.calories}>
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              style={{
+                position: "absolute", left: "50%", top: 23, transform: "translate(-50%,0)",
+                background: "linear-gradient(135deg,#35c7a5 60%,#229ED9)", color: "#fff",
+                fontWeight: 800, fontSize: 16, border: "none", borderRadius: 11, padding: "10px 18px",
+                cursor: "pointer", boxShadow: "0 2px 8px #53ddc94d", zIndex: 9, minWidth: 110
+              }}
+              onClick={onGoToChat}
+            >ИИ Тренер</motion.button>
+          </CaloriesRing>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#d1d1d1", marginTop: 7, marginBottom: 0, textAlign: "center" }}>КАЛОРИИ</div>
+          <div style={{ fontWeight: 800, fontSize: 31, color: "#222", marginTop: -82 }}>{summary.calories}</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#b9b9b9", marginBottom: 10 }}>{kbju.calories} цель</div>
+          <div style={{ width: "100%", marginTop: 12 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#3b3b3b", marginBottom: 4 }}>Обзор</div>
+            <MacroBar label="Углеводы" value={summary.carb} max={kbju.carb} color="#3bafe8" />
+            <MacroBar label="Белки" value={summary.protein} max={kbju.protein} color="#5fc77f" />
+            <MacroBar label="Жиры" value={summary.fat} max={kbju.fat} color="#ffb24a" />
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: "0 0 52%" }}>
+          <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 14px #ececec", padding: "10px 0 2px 0", display: "flex", justifyContent: "space-around" }}>
+            <SmallRing value={summary.protein} max={kbju.protein} label="Белки" color="#5fc77f" />
+            <SmallRing value={summary.carb} max={kbju.carb} label="Углеводы" color="#3bafe8" />
+            <SmallRing value={summary.fat} max={kbju.fat} label="Жиры" color="#ffb24a" />
+          </div>
+          <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 14px #ececec", padding: "13px 8px 17px 8px", textAlign: "center" }}>
+            <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 1 }}>Сегодня</div>
+            <div style={{ color: "#888", fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{getDayString()}</div>
+            <motion.button
+              onClick={onGoToCalc}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                background: "linear-gradient(135deg,#3bafe8 80%,#53ddc9)", color: "#fff",
+                fontWeight: 800, fontSize: 17, border: "none", borderRadius: 13,
+                padding: "12px 0", width: "100%", margin: "10px 0 0 0", cursor: "pointer", boxShadow: "0 2px 12px #3bafe82a"
+              }}>
+              Добавить еду
+            </motion.button>
+          </div>
+          <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 14px #ececec", padding: "12px 11px", minHeight: 77 }}>
+            <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>Последние блюда</div>
+            {allMeals.length === 0 && (
+              <div style={{ color: "#aaa", fontSize: 15, marginTop: 7 }}>Пока ничего не добавлено</div>
+            )}
+            {allMeals.slice(-3).reverse().map((m, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 15, marginBottom: 2 }}>
+                <span>{m.emoji || "🍽️"} {m.name}</span>
+                <span style={{ fontWeight: 700 }}>{m.grams} г</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 // Кольцо калорий с логотипом внутри
 function CaloriesRing({ value, max, children }) {
-  const pct = Math.min(100, (value / max) * 100);
+  const pct = Math.min(100, (value / max) * 100 || 0);
   const size = 110, r = 48, c = 2 * Math.PI * r;
   return (
     <div style={{ position: "relative", width: size, height: size, marginBottom: 8 }}>
@@ -523,7 +402,7 @@ function CaloriesRing({ value, max, children }) {
 
 // Маленькое кольцо для макроэлементов
 function SmallRing({ value, max, label, color }) {
-  const pct = Math.min(100, (value / max) * 100);
+  const pct = Math.min(100, (value / max) * 100 || 0);
   const size = 46, r = 18, c = 2 * Math.PI * r;
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 55 }}>
@@ -545,37 +424,28 @@ function SmallRing({ value, max, label, color }) {
   );
 }
 
-// Прогресс-бар макроэлементов
-function MacroBar({ label, value, max, color }) {
-  const pct = Math.min(100, (value / max) * 100);
+// Нижнее меню для мобильного
+function MobileMenu({ tab, setTab }) {
   return (
-    <div style={{ marginBottom: 8 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 2 }}>
-        <span>{label}</span>
-        <span style={{ fontWeight: 600 }}>{value} / {max} г</span>
-      </div>
-      <div style={{ background: "#f0f0f0", borderRadius: 7, height: 8, width: "100%" }}>
-        <div style={{
-          background: color, height: 8, borderRadius: 7, width: `${pct}%`, transition: ".47s"
-        }} />
-      </div>
-    </div>
+    <motion.div
+      initial={{ y: 70 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 160, damping: 18 }}
+      style={{
+        width: "100vw", position: "fixed", left: 0, bottom: 0, background: "#fff",
+        borderTop: "1px solid #f0f0f1", boxShadow: "0 -2px 12px #e9f1fe11", height: 66,
+        zIndex: 111, display: "flex", justifyContent: "space-around", alignItems: "center",
+        paddingBottom: "env(safe-area-inset-bottom, 10px)"
+      }}>
+      <TabItem icon={<FaHome />} label="Главная" active={tab === "home"} onClick={() => setTab("home")} />
+      <TabItem icon={<FaAppleAlt />} label="Кальк." active={tab === "calc"} onClick={() => setTab("calc")} />
+      <TabItem icon={<FaRobot />} label="ИИ" active={tab === "chat"} onClick={() => setTab("chat")} />
+      <TabItem icon={<FaUtensils />} label="Блюда" active={tab === "meals"} onClick={() => setTab("meals")} />
+      <TabItem icon={<FaCog />} label="Настройки" active={tab === "settings"} onClick={() => setTab("settings")} />
+    </motion.div>
   );
 }
 
-// Логотип бота
-function BotLogo({ big }) {
-  return (
-    <div style={{
-      width: big ? 43 : 28, height: big ? 43 : 28, background: "#3bafe8",
-      borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px #3bafe822"
-    }}>
-      <PiBowlFoodFill color="#fff" size={big ? 29 : 19} />
-    </div>
-  );
-}
-
-// Кнопка нижнего меню
 function TabItem({ icon, label, active, onClick }) {
   return (
     <motion.div
@@ -583,7 +453,7 @@ function TabItem({ icon, label, active, onClick }) {
       onClick={onClick}
       style={{
         flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        fontWeight: 700, fontSize: 15, cursor: "pointer", color: active ? "#3bafe8" : "#b4b4b4"
+        fontWeight: 700, fontSize: 15, cursor: "pointer", color: active ? "#229ED9" : "#b4b4b4"
       }}>
       <span style={{ fontSize: 26, marginBottom: 2 }}>{icon}</span>
       <div style={{ fontSize: 13, marginTop: "-2px", letterSpacing: ".01em" }}>{label}</div>
@@ -595,7 +465,7 @@ function TabItem({ icon, label, active, onClick }) {
           exit={{ opacity: 0, scaleX: 0.8 }}
           transition={{ duration: .3 }}
           style={{
-            marginTop: 3, width: 22, height: 3, borderRadius: 2, background: "#3bafe8",
+            marginTop: 3, width: 22, height: 3, borderRadius: 2, background: "#229ED9",
             boxShadow: "0 1.5px 6px #a9d4ff55"
           }}
         />
@@ -603,33 +473,5 @@ function TabItem({ icon, label, active, onClick }) {
     </motion.div>
   );
 }
-
-// Стили для инпутов и кнопок
-const inputStyle = {
-  width: "100%",
-  border: "1.5px solid #e2e7ea",
-  borderRadius: 10,
-  padding: "11px 13px",
-  fontSize: 16,
-  marginBottom: 10,
-  outline: "none",
-  fontWeight: 600,
-  color: "#222",
-  background: "#f8f9fb"
-};
-
-const buttonStyle = {
-  width: "100%",
-  background: "linear-gradient(135deg,#3bafe8 70%,#5fc77f)",
-  color: "#fff",
-  fontWeight: 800,
-  fontSize: 17,
-  border: "none",
-  borderRadius: 11,
-  padding: "13px 0",
-  marginTop: 10,
-  cursor: "pointer",
-  boxShadow: "0 2px 12px #3bafe82a"
-};
 
 export default App;
