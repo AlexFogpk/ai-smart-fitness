@@ -11,6 +11,7 @@ import {
   MealsMobile,
   MacroBar,
 } from "./components/MobileExtra";
+import './theme.css';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
