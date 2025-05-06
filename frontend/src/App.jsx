@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaHome, FaAppleAlt, FaRobot, FaUtensils, FaCog } from "react-icons/fa";
-import LogoRobot from "./LoadingLogos";
+import { PiBowlFoodFill } from "react-icons/pi"; // Добавлен импорт недостающей иконки
 import {
   CalculatorMobile,
   AIChatMobile,
@@ -9,8 +9,7 @@ import {
   MealsMobile,
   MacroBar,
 } from "./components/MobileExtra";
-// === ВАЖНО: импортируй нового робота! ===
-import LogoRobot from "./LoadingLogos";
+import LogoRobot from "./LoadingLogos"; // Удалён дублирующийся импорт
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -32,8 +31,21 @@ function getKBJU({ sex, weight, height, age, activity, goal }) {
   };
 }
 function getDayString(date = new Date()) {
-  const days = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четвер��", "Пятница", "Суббота"];
-  const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+  const days = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]; // Исправлено "Четвер��" на "Четверг"
+  const months = [
+    "января",
+    "февраля",
+    "марта",
+    "апреля",
+    "мая",
+    "июня",
+    "июля",
+    "августа",
+    "сентября",
+    "октября",
+    "ноября",
+    "декабря",
+  ];
   return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
 }
 const defaultProfile = {
@@ -62,6 +74,7 @@ function App() {
   const [telegramName, setTelegramName] = useState("");
   useEffect(() => {
     if (
+      typeof window !== "undefined" && // Добавлена проверка на существование объекта window
       window.Telegram &&
       window.Telegram.WebApp &&
       window.Telegram.WebApp.initDataUnsafe?.user?.first_name
@@ -86,7 +99,7 @@ function App() {
       setTyped("");
       let i = 0;
       const typing = setInterval(() => {
-        setTyped(txt => {
+        setTyped((txt) => {
           if (i < full.length) {
             i++;
             return full.slice(0, i);
@@ -102,24 +115,24 @@ function App() {
 
   useEffect(() => {
     if (stage === "welcome" && telegramName && !profile.name) {
-      setProfile(p => ({ ...p, name: telegramName }));
+      setProfile((p) => ({ ...p, name: telegramName }));
     }
   }, [stage, telegramName, profile.name]);
 
   const kbju = getKBJU(profile);
   const [mealsByType, setMealsByType] = useState(initialMealsByType);
   const allMeals = [
-    ...mealsByType.breakfast.map(m => ({ ...m, type: "breakfast" })),
-    ...mealsByType.lunch.map(m => ({ ...m, type: "lunch" })),
-    ...mealsByType.dinner.map(m => ({ ...m, type: "dinner" })),
-    ...mealsByType.snack.map(m => ({ ...m, type: "snack" })),
+    ...mealsByType.breakfast.map((m) => ({ ...m, type: "breakfast" })),
+    ...mealsByType.lunch.map((m) => ({ ...m, type: "lunch" })),
+    ...mealsByType.dinner.map((m) => ({ ...m, type: "dinner" })),
+    ...mealsByType.snack.map((m) => ({ ...m, type: "snack" })),
   ];
   const summary = allMeals.reduce(
     (acc, m) => ({
       calories: acc.calories + (m.calories || 0),
       protein: acc.protein + (m.protein || 0),
       carb: acc.carb + (m.carb || 0),
-      fat: acc.fat + (m.fat || 0)
+      fat: acc.fat + (m.fat || 0),
     }),
     { calories: 0, protein: 0, carb: 0, fat: 0 }
   );
