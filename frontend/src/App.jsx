@@ -36,6 +36,7 @@ function App() {
   });
   const inputRef = useRef();
   const [typed, setTyped] = useState(""); // для анимации печатающегося текста
+  const [telegramName, setTelegramName] = useState("");
 
   // ----- Splash (анимированный)
   useEffect(() => {
@@ -44,9 +45,28 @@ function App() {
     }
   }, [stage]);
 
+  // Получаем имя из Telegram только один раз (при старте)
+  useEffect(() => {
+    if (
+      window.Telegram &&
+      window.Telegram.WebApp &&
+      window.Telegram.WebApp.initDataUnsafe?.user?.first_name
+    ) {
+      setTelegramName(window.Telegram.WebApp.initDataUnsafe.user.first_name);
+    }
+  }, []);
+
+  // Если имя из Telegram подтянулось, сразу записываем его и переходим к анкете
+  useEffect(() => {
+    if (stage === "welcome" && telegramName) {
+      setName(telegramName);
+      setTimeout(() => setStage("onboard"), 900); // маленькая задержка для анимации welcome
+    }
+  }, [stage, telegramName]);
+
   // ----- Печатающийся текст на welcome
   useEffect(() => {
-    if (stage === "welcome" && !name) {
+    if (stage === "welcome" && !telegramName) {
       const full = "Добро пожаловать в SmartFitness AI!";
       setTyped("");
       let i = 0;
@@ -63,12 +83,7 @@ function App() {
       }, 34);
       return () => clearInterval(typing);
     }
-  }, [stage, name]);
-
-  // Автофокус на input
-  useEffect(()=>{
-    if(stage==="welcome" && !name) setTimeout(()=>inputRef.current?.focus(), 400);
-  },[stage, name]);
+  }, [stage, telegramName]);
 
   // ----- Splash -----
   if (stage === "splash") {
@@ -101,99 +116,36 @@ function App() {
 
   // ----- Приветствие -----
   if (stage === "welcome") {
-    // Если нет имени — предлагаем ввести, анимируем текст
-    if (!name) {
-      return (
-        <div style={{
-          minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#f3f7fa 10%,#f2fff6 90%)",
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
-        }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: .7 }}
-            style={{
-              padding: "34px 10px 30px 10px", background: "#fff", borderRadius: 29,
-              boxShadow: "0 4px 38px #ddeff940", width: "95vw", maxWidth: 390, minHeight: 270,
-              display: "flex", flexDirection: "column", alignItems: "center"
-            }}
-          >
-            <TypingText text={typed} style={{
-              fontSize: 26, fontWeight: 800, color: "#1d3557",
-              minHeight: 38, marginBottom: 21, marginTop: 5
-            }} />
-            <form style={{ width: "100%" }} autoComplete="off">
-              <input
-                ref={inputRef}
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value.replace(/[^а-яА-Яa-zA-Z0-9\- ]/g, ""))}
-                placeholder="Ваше имя"
-                style={{
-                  fontSize: 21,
-                  padding: "17px 14px",
-                  width: "99%",
-                  border: "1.2px solid #e3ebf3",
-                  borderRadius: 15,
-                  background: "#f6f8fc",
-                  outline: "none",
-                  marginBottom: 19,
-                  color: "#222",
-                  fontWeight: 700,
-                  boxSizing: "border-box"
-                }}
-                required
-                minLength={2}
-                onKeyDown={e => {
-                  if (e.key === "Enter") e.preventDefault();
-                }}
-              />
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.96 }}
-                style={{
-                  width: "100%", padding: "16px 0", fontWeight: 800, fontSize: 20,
-                  background: "linear-gradient(135deg,#68e0cf 60%,#6ccf83)",
-                  color: "#fff", border: 0, borderRadius: 15, cursor: "pointer", marginTop: 2,
-                  boxShadow: "0 2px 14px #63d1c32c", transition: ".2s"
-                }}
-                onClick={() => {
-                  if (name.trim().length > 1) setStage("onboard");
-                }}
-                disabled={name.trim().length < 2}
-              >Продолжить</motion.button>
-            </form>
-          </motion.div>
-        </div>
-      );
-    }
-
-    // Если имя есть — просто приветствие и кнопка "Продолжить"
+    // Показываем красивый приветственный экран и ждём загрузку имени
     return (
       <div style={{
         minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#f3f7fa 10%,#f2fff6 90%)",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
       }}>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .7 }}
           style={{
-            padding: "38px 24px 31px 24px", background: "#fff", borderRadius: 28,
-            boxShadow: "0 4px 38px #ddeff940", width: "95vw", maxWidth: 375, minHeight: 230,
+            padding: "34px 10px 30px 10px", background: "#fff", borderRadius: 29,
+            boxShadow: "0 4px 38px #ddeff940", width: "95vw", maxWidth: 390, minHeight: 270,
             display: "flex", flexDirection: "column", alignItems: "center"
-          }}>
-          <div style={{ fontSize: 34, fontWeight: 800, color: "#1d3557", marginBottom: 13 }}>👋 Привет, {name}!</div>
-          <div style={{ fontSize: 17, color: "#6d7887", fontWeight: 600, marginBottom: 23, marginTop: -3 }}>Это твой SmartFitness AI<br />Давай начнём путь к цели!</div>
-          <motion.button
-            onClick={() => setStage("onboard")}
-            whileTap={{ scale: 0.97 }}
-            style={{
-              width: "100%", padding: "17px 0", fontWeight: 800, fontSize: 20,
-              background: "linear-gradient(135deg,#68e0cf 60%,#6ccf83)", color: "#fff",
-              border: 0, borderRadius: 15, cursor: "pointer", marginTop: 2, boxShadow: "0 2px 14px #63d1c32c"
-            }}
-          >Продолжить</motion.button>
+          }}
+        >
+          <TypingText text={typed || `Здравствуйте${telegramName ? ', ' + telegramName : ""}!`} style={{
+            fontSize: 26, fontWeight: 800, color: "#1d3557",
+            minHeight: 38, marginBottom: 21, marginTop: 5
+          }} />
+          {!telegramName && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: .5, duration: .7 }}
+              style={{ fontSize: 18, color: "#888", marginTop: 18 }}
+            >
+              Ожидание данных Telegram...
+            </motion.div>
+          )}
         </motion.div>
       </div>
     );
@@ -457,7 +409,13 @@ function App() {
                 style={{
                   background: "#fff", borderRadius: 24, padding: "32px", marginTop: 20,
                   textAlign: "center", color: "#444", fontWeight: 700, fontSize: 21
-                }}>Настройки (скоро...)</motion.div>
+                }}>
+                <div>Настройки (скоро...)</div>
+                <div style={{ marginTop: 30, fontWeight: 600, fontSize: 16 }}>
+                  Имя в Telegram: <span style={{ color: "#2573ff" }}>{name}</span>
+                </div>
+                {/* Здесь позже можно сделать смену имени */}
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
