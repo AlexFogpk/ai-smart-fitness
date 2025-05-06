@@ -9,6 +9,8 @@ import {
   MealsMobile,
   MacroBar,
 } from "./components/MobileExtra";
+// === ВАЖНО: импортируй нового робота! ===
+import LogoRobot from "./LoadingLogos";
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -128,25 +130,14 @@ function App() {
   const [calcMode, setCalcMode] = useState("manual");
   const [aiLoading, setAiLoading] = useState(false);
 
+  // ===== ЗАМЕНА ЛОГОТИПА ЗАГРУЗКИ =====
   if (stage === "splash") {
     return (
       <div style={{
         minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#eef5fe 30%,#dffcf9 90%)",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
       }}>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-          style={{ width: 77, height: 77, marginBottom: 12 }}
-        >
-          <svg width={77} height={77}>
-            <circle cx={38.5} cy={38.5} r={33} stroke="#3baef2" strokeWidth={8} fill="none" strokeDasharray="80 90" strokeLinecap="round" />
-            <circle cx={38.5} cy={38.5} r={24} stroke="#68e0cf" strokeWidth={7} fill="none" strokeDasharray="38 50" strokeLinecap="round" />
-          </svg>
-          <svg width={22} height={22} style={{ position: "absolute", left: 28, top: 28 }}>
-            <path d="M15.2 7.8C14.7 7.2 13.8 6.8 12.8 6.8c-1.2 0-2.3.8-3 1.6-.7.8-1.1 1.7-1.1 2.7 0 1.1.3 2.1.8 2.8.4.5 1 .8 1.9.8 1.2 0 2.3-.8 3-1.6.7-.8 1.1-1.7 1.1-2.7 0-1.2-.3-2.1-.8-2.8z" fill="#229ED9" />
-          </svg>
-        </motion.div>
+        <LogoRobot />
         <div style={{
           fontSize: 26, color: "#229ED9", fontWeight: 800, letterSpacing: ".01em", marginTop: 15
         }}>
