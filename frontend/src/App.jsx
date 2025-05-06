@@ -2,18 +2,15 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaHome, FaAppleAlt, FaRobot, FaUtensils, FaCog } from "react-icons/fa";
 import { PiBowlFoodFill } from "react-icons/pi";
-
 import {
   CalculatorMobile,
   AIChatMobile,
   SettingsMobile,
   MealsMobile,
   MacroBar,
-  inputStyle,
-  buttonStyle,
 } from "./components/MobileExtra";
 
-// --------- Утилиты ---------
+// ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
   let bmr =
     sex === "male"
@@ -32,14 +29,11 @@ function getKBJU({ sex, weight, height, age, activity, goal }) {
     carb,
   };
 }
-
 function getDayString(date = new Date()) {
-  const days = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+  const days = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четвер��", "Пятница", "Суббота"];
   const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
   return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
 }
-
-// --------- Начальные данные ---------
 const defaultProfile = {
   sex: "male",
   age: 25,
@@ -49,7 +43,6 @@ const defaultProfile = {
   goal: "maintain",
   name: "",
 };
-
 const initialMealsByType = {
   breakfast: [],
   lunch: [],
@@ -57,10 +50,10 @@ const initialMealsByType = {
   snack: [],
 };
 
-// --------- Главный компонент ---------
+// ------ Главный компонент ------
 function App() {
-  const [stage, setStage] = useState("splash"); // splash, welcome, app
-  const [tab, setTab] = useState("home"); // home, calc, chat, meals, settings
+  const [stage, setStage] = useState("splash");
+  const [tab, setTab] = useState("home");
   const [profile, setProfile] = useState(defaultProfile);
 
   // Имя Telegram
@@ -78,7 +71,7 @@ function App() {
   // Splash (загрузка)
   useEffect(() => {
     if (stage === "splash") {
-      setTimeout(() => setStage("welcome"), 1700);
+      setTimeout(() => setStage("welcome"), 1200);
     }
   }, [stage]);
 
@@ -105,28 +98,20 @@ function App() {
     }
   }, [stage, telegramName]);
 
-  // При инициализации профиля
   useEffect(() => {
     if (stage === "welcome" && telegramName && !profile.name) {
       setProfile(p => ({ ...p, name: telegramName }));
     }
   }, [stage, telegramName, profile.name]);
 
-  // Цели КБЖУ
   const kbju = getKBJU(profile);
-
-  // Состояние приёмов пищи по типу
   const [mealsByType, setMealsByType] = useState(initialMealsByType);
-
-  // Все приёмы в плоском виде для истории/главной
   const allMeals = [
     ...mealsByType.breakfast.map(m => ({ ...m, type: "breakfast" })),
     ...mealsByType.lunch.map(m => ({ ...m, type: "lunch" })),
     ...mealsByType.dinner.map(m => ({ ...m, type: "dinner" })),
     ...mealsByType.snack.map(m => ({ ...m, type: "snack" })),
   ];
-
-  // Итог за день
   const summary = allMeals.reduce(
     (acc, m) => ({
       calories: acc.calories + (m.calories || 0),
@@ -136,20 +121,13 @@ function App() {
     }),
     { calories: 0, protein: 0, carb: 0, fat: 0 }
   );
-
-  // Состояние чата
   const [messages, setMessages] = useState([]);
-
-  // Для смены имени в настройках
   const [editName, setEditName] = useState(false);
   const [newName, setNewName] = useState(profile.name);
-
-  // Для калькулятора питания
-  const [calcType, setCalcType] = useState("breakfast"); // breakfast, lunch, dinner, snack
-  const [calcMode, setCalcMode] = useState("manual"); // manual, ai
+  const [calcType, setCalcType] = useState("breakfast");
+  const [calcMode, setCalcMode] = useState("manual");
   const [aiLoading, setAiLoading] = useState(false);
 
-  // --------- Splash ---------
   if (stage === "splash") {
     return (
       <div style={{
@@ -179,7 +157,6 @@ function App() {
     );
   }
 
-  // --------- Welcome ---------
   if (stage === "welcome") {
     return (
       <div style={{
@@ -222,13 +199,12 @@ function App() {
     );
   }
 
-  // --------- Приложение ---------
   return (
     <div
       style={{
         minHeight: "100vh",
         background: "#fafbfc",
-        paddingBottom: 66, // Высота MobileMenu
+        paddingBottom: 72, // чтобы меню не перекрывалось
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
       }}
     >
@@ -288,8 +264,7 @@ function App() {
   );
 }
 
-// ----------- Мобильные компоненты ----------
-
+// --- ГЛАВНАЯ СТРАНИЦА ---
 function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
   return (
     <motion.div
@@ -298,56 +273,58 @@ function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
       style={{
         maxWidth: 430,
         margin: "0 auto",
-        padding: "18px 0 0 0",
-        position: "relative",
+        padding: "18px 0 10px 0",
         display: "flex",
         flexDirection: "column",
         gap: 16,
-        alignItems: "center"
+        alignItems: "center",
+        minHeight: "calc(100vh - 72px)",
+        boxSizing: "border-box"
       }}
     >
       <div style={{
-        width: "94%",
+        width: "93%",
         background: "#fff",
         borderRadius: 22,
         boxShadow: "0 2px 14px #ececec",
-        padding: "20px 0 18px 0",
-        minWidth: 0,
+        padding: "25px 0 18px 0",
         display: "flex",
         flexDirection: "column",
         alignItems: "center"
       }}>
         <CaloriesRing value={summary.calories} max={kbju.calories} />
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#d1d1d1", marginTop: 5, marginBottom: 0, textAlign: "center" }}>КАЛОРИИ</div>
-        <div style={{ fontWeight: 800, fontSize: 31, color: "#222", marginTop: -72 }}>{summary.calories}</div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#b9b9b9", marginBottom: 10 }}>{kbju.calories} цель</div>
+        <div style={{ fontWeight: 800, fontSize: 32, color: "#222", marginTop: 9 }}>{summary.calories}</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: "#b9b9b9", marginBottom: 10 }}>
+          <span style={{ color: "#229ED9", fontWeight: 800 }}>{kbju.calories}</span> цель
+        </div>
         <MacroBar label="Углеводы" value={summary.carb} max={kbju.carb} color="#3bafe8" />
         <MacroBar label="Белки" value={summary.protein} max={kbju.protein} color="#5fc77f" />
         <MacroBar label="Жиры" value={summary.fat} max={kbju.fat} color="#ffb24a" />
         <motion.button
           whileTap={{ scale: 0.93 }}
           style={{
-            marginTop: 18,
+            marginTop: 20,
             background: "linear-gradient(135deg,#35c7a5 60%,#229ED9)",
             color: "#fff",
             fontWeight: 800,
-            fontSize: 16,
+            fontSize: 17,
             border: "none",
-            borderRadius: 11,
-            padding: "10px 18px",
+            borderRadius: 13,
+            padding: "12px 0",
             cursor: "pointer",
             boxShadow: "0 2px 8px #53ddc94d",
-            minWidth: 150
+            width: "85%",
+            maxWidth: 260
           }}
           onClick={onGoToChat}
         >ИИ Тренер</motion.button>
       </div>
       <div style={{
-        width: "94%",
+        width: "93%",
         background: "#fff",
         borderRadius: 18,
         boxShadow: "0 2px 14px #ececec",
-        padding: "15px 15px 19px 15px",
+        padding: "18px 14px 19px 14px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center"
@@ -374,16 +351,16 @@ function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
         </motion.button>
       </div>
       <div style={{
-        width: "94%",
+        width: "93%",
         background: "#fff",
         borderRadius: 18,
         boxShadow: "0 2px 14px #ececec",
-        padding: "13px 15px 20px 15px",
-        minHeight: 77
+        padding: "15px 14px 22px 14px",
+        minHeight: 80
       }}>
         <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>Последние блюда</div>
         {allMeals.length === 0 ? (
-          <div style={{ color: "#aaa", fontSize: 15, marginTop: 11, textAlign: "center" }}>
+          <div style={{ color: "#aaa", fontSize: 15, marginTop: 12, textAlign: "center" }}>
             <span role="img" aria-label="plate" style={{ fontSize: 22 }}>🍽️</span>
             <br />
             <span>Пока ничего не добавлено</span>
@@ -401,17 +378,16 @@ function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
   );
 }
 
-// Кольцо калорий с логотипом внутри
 function CaloriesRing({ value, max }) {
   const pct = Math.min(100, (value / max) * 100 || 0);
-  const size = 110, r = 48, c = 2 * Math.PI * r;
+  const size = 108, r = 44, c = 2 * Math.PI * r;
   return (
-    <div style={{ position: "relative", width: size, height: size, marginBottom: 8 }}>
+    <div style={{ position: "relative", width: size, height: size, marginBottom: 6 }}>
       <svg width={size} height={size}>
-        <circle r={r} cx={size/2} cy={size/2} stroke="#f2f2f2" strokeWidth={10} fill="none" />
+        <circle r={r} cx={size/2} cy={size/2} stroke="#f2f2f2" strokeWidth={9} fill="none" />
         <motion.circle
           r={r} cx={size/2} cy={size/2}
-          fill="none" stroke="#ff4941" strokeWidth={13}
+          fill="none" stroke="#229ED9" strokeWidth={12}
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c - (c * pct / 100)}
@@ -423,13 +399,13 @@ function CaloriesRing({ value, max }) {
         position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)",
         display: "flex", flexDirection: "column", alignItems: "center"
       }}>
-        <PiBowlFoodFill color="#229ED9" size={37} />
+        <PiBowlFoodFill color="#229ED9" size={38} />
       </div>
     </div>
   );
 }
 
-// Нижнее меню для мобильного — всегда прижато к низу!
+// --- Нижнее меню ---
 function MobileMenu({ tab, setTab }) {
   return (
     <motion.div
@@ -444,7 +420,7 @@ function MobileMenu({ tab, setTab }) {
         background: "#fff",
         borderTop: "1px solid #f0f0f1",
         boxShadow: "0 -2px 12px #e9f1fe11",
-        height: 66,
+        height: 62,
         zIndex: 111,
         display: "flex",
         justifyContent: "space-around",
@@ -458,7 +434,6 @@ function MobileMenu({ tab, setTab }) {
     </motion.div>
   );
 }
-
 function TabItem({ icon, label, active, onClick }) {
   return (
     <motion.div
