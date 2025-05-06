@@ -228,7 +228,7 @@ function App() {
       style={{
         minHeight: "100vh",
         background: "#fafbfc",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 70px)",
+        paddingBottom: 66, // Высота MobileMenu
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
       }}
     >
@@ -295,85 +295,114 @@ function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
     <motion.div
       initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }}
       transition={{ duration: .6 }}
-      style={{ maxWidth: 530, margin: "0 auto", padding: "15px 0 0 0", position: "relative" }}
+      style={{
+        maxWidth: 430,
+        margin: "0 auto",
+        padding: "18px 0 0 0",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        alignItems: "center"
+      }}
     >
       <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 18px 7px 18px", marginBottom: 2
+        width: "94%",
+        background: "#fff",
+        borderRadius: 22,
+        boxShadow: "0 2px 14px #ececec",
+        padding: "20px 0 18px 0",
+        minWidth: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center"
       }}>
-        <div style={{ fontWeight: 800, fontSize: 19, color: "#1e222c" }}>SmartFitness AI</div>
-        <div style={{ fontSize: 14, color: "#b5b5b5", fontWeight: 600 }}>мини-приложение</div>
+        <CaloriesRing value={summary.calories} max={kbju.calories} />
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#d1d1d1", marginTop: 5, marginBottom: 0, textAlign: "center" }}>КАЛОРИИ</div>
+        <div style={{ fontWeight: 800, fontSize: 31, color: "#222", marginTop: -72 }}>{summary.calories}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#b9b9b9", marginBottom: 10 }}>{kbju.calories} цель</div>
+        <MacroBar label="Углеводы" value={summary.carb} max={kbju.carb} color="#3bafe8" />
+        <MacroBar label="Белки" value={summary.protein} max={kbju.protein} color="#5fc77f" />
+        <MacroBar label="Жиры" value={summary.fat} max={kbju.fat} color="#ffb24a" />
+        <motion.button
+          whileTap={{ scale: 0.93 }}
+          style={{
+            marginTop: 18,
+            background: "linear-gradient(135deg,#35c7a5 60%,#229ED9)",
+            color: "#fff",
+            fontWeight: 800,
+            fontSize: 16,
+            border: "none",
+            borderRadius: 11,
+            padding: "10px 18px",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #53ddc94d",
+            minWidth: 150
+          }}
+          onClick={onGoToChat}
+        >ИИ Тренер</motion.button>
       </div>
       <div style={{
-        display: "flex", flexDirection: "row", gap: 11, alignItems: "flex-start",
-        padding: "0 10px"
+        width: "94%",
+        background: "#fff",
+        borderRadius: 18,
+        boxShadow: "0 2px 14px #ececec",
+        padding: "15px 15px 19px 15px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center"
       }}>
-        <div style={{
-          background: "#fff", borderRadius: 22, boxShadow: "0 2px 14px #ececec",
-          padding: "16px 11px 18px 11px", minWidth: 0, minHeight: 280, flex: "1 0 0", position: "relative", display: "flex", flexDirection: "column", alignItems: "center"
-        }}>
-          <CaloriesRing value={summary.calories} max={kbju.calories}>
-            <motion.button
-              whileTap={{ scale: 0.93 }}
-              style={{
-                position: "absolute", left: "50%", top: 23, transform: "translate(-50%,0)",
-                background: "linear-gradient(135deg,#35c7a5 60%,#229ED9)", color: "#fff",
-                fontWeight: 800, fontSize: 16, border: "none", borderRadius: 11, padding: "10px 18px",
-                cursor: "pointer", boxShadow: "0 2px 8px #53ddc94d", zIndex: 9, minWidth: 110
-              }}
-              onClick={onGoToChat}
-            >ИИ Тренер</motion.button>
-          </CaloriesRing>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#d1d1d1", marginTop: 7, marginBottom: 0, textAlign: "center" }}>КАЛОРИИ</div>
-          <div style={{ fontWeight: 800, fontSize: 31, color: "#222", marginTop: -82 }}>{summary.calories}</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#b9b9b9", marginBottom: 10 }}>{kbju.calories} цель</div>
-          <div style={{ width: "100%", marginTop: 12 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#3b3b3b", marginBottom: 4 }}>Обзор</div>
-            <MacroBar label="Углеводы" value={summary.carb} max={kbju.carb} color="#3bafe8" />
-            <MacroBar label="Белки" value={summary.protein} max={kbju.protein} color="#5fc77f" />
-            <MacroBar label="Жиры" value={summary.fat} max={kbju.fat} color="#ffb24a" />
+        <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 2 }}>Сегодня</div>
+        <div style={{ color: "#888", fontWeight: 600, fontSize: 14, marginBottom: 10 }}>{getDayString()}</div>
+        <motion.button
+          onClick={onGoToCalc}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            background: "linear-gradient(135deg,#3bafe8 80%,#53ddc9)",
+            color: "#fff",
+            fontWeight: 800,
+            fontSize: 17,
+            border: "none",
+            borderRadius: 13,
+            padding: "12px 0",
+            width: "100%",
+            margin: "10px 0 0 0",
+            cursor: "pointer",
+            boxShadow: "0 2px 12px #3bafe82a"
+          }}>
+          Добавить еду
+        </motion.button>
+      </div>
+      <div style={{
+        width: "94%",
+        background: "#fff",
+        borderRadius: 18,
+        boxShadow: "0 2px 14px #ececec",
+        padding: "13px 15px 20px 15px",
+        minHeight: 77
+      }}>
+        <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>Последние блюда</div>
+        {allMeals.length === 0 ? (
+          <div style={{ color: "#aaa", fontSize: 15, marginTop: 11, textAlign: "center" }}>
+            <span role="img" aria-label="plate" style={{ fontSize: 22 }}>🍽️</span>
+            <br />
+            <span>Пока ничего не добавлено</span>
           </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: "0 0 52%" }}>
-          <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 14px #ececec", padding: "10px 0 2px 0", display: "flex", justifyContent: "space-around" }}>
-            <SmallRing value={summary.protein} max={kbju.protein} label="Белки" color="#5fc77f" />
-            <SmallRing value={summary.carb} max={kbju.carb} label="Углеводы" color="#3bafe8" />
-            <SmallRing value={summary.fat} max={kbju.fat} label="Жиры" color="#ffb24a" />
-          </div>
-          <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 14px #ececec", padding: "13px 8px 17px 8px", textAlign: "center" }}>
-            <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 1 }}>Сегодня</div>
-            <div style={{ color: "#888", fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{getDayString()}</div>
-            <motion.button
-              onClick={onGoToCalc}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                background: "linear-gradient(135deg,#3bafe8 80%,#53ddc9)", color: "#fff",
-                fontWeight: 800, fontSize: 17, border: "none", borderRadius: 13,
-                padding: "12px 0", width: "100%", margin: "10px 0 0 0", cursor: "pointer", boxShadow: "0 2px 12px #3bafe82a"
-              }}>
-              Добавить еду
-            </motion.button>
-          </div>
-          <div style={{ background: "#fff", borderRadius: 18, boxShadow: "0 2px 14px #ececec", padding: "12px 11px", minHeight: 77 }}>
-            <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>Последние блюда</div>
-            {allMeals.length === 0 && (
-              <div style={{ color: "#aaa", fontSize: 15, marginTop: 7 }}>Пока ничего не добавлено</div>
-            )}
-            {allMeals.slice(-3).reverse().map((m, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 15, marginBottom: 2 }}>
-                <span>{m.emoji || "🍽️"} {m.name}</span>
-                <span style={{ fontWeight: 700 }}>{m.grams} г</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        ) : (
+          allMeals.slice(-3).reverse().map((m, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 15, marginBottom: 2 }}>
+              <span>{m.emoji || "🍽️"} {m.name}</span>
+              <span style={{ fontWeight: 700 }}>{m.grams} г</span>
+            </div>
+          ))
+        )}
       </div>
     </motion.div>
   );
 }
 
 // Кольцо калорий с логотипом внутри
-function CaloriesRing({ value, max, children }) {
+function CaloriesRing({ value, max }) {
   const pct = Math.min(100, (value / max) * 100 || 0);
   const size = 110, r = 48, c = 2 * Math.PI * r;
   return (
@@ -394,37 +423,13 @@ function CaloriesRing({ value, max, children }) {
         position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)",
         display: "flex", flexDirection: "column", alignItems: "center"
       }}>
-        {children}
+        <PiBowlFoodFill color="#229ED9" size={37} />
       </div>
     </div>
   );
 }
 
-// Маленькое кольцо для макроэлементов
-function SmallRing({ value, max, label, color }) {
-  const pct = Math.min(100, (value / max) * 100 || 0);
-  const size = 46, r = 18, c = 2 * Math.PI * r;
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 55 }}>
-      <svg width={size} height={size}>
-        <circle r={r} cx={size/2} cy={size/2} stroke="#f2f2f2" strokeWidth={6} fill="none" />
-        <motion.circle
-          r={r} cx={size/2} cy={size/2}
-          fill="none" stroke={color} strokeWidth={7}
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={c - (c * pct / 100)}
-          animate={{ strokeDashoffset: c - (c * pct / 100) }}
-          transition={{ duration: .7 }}
-        />
-      </svg>
-      <div style={{ fontWeight: 800, fontSize: 15, color: color, marginTop: -32 }}>{value}</div>
-      <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>{label}</div>
-    </div>
-  );
-}
-
-// Нижнее меню для мобильного
+// Нижнее меню для мобильного — всегда прижато к низу!
 function MobileMenu({ tab, setTab }) {
   return (
     <motion.div
@@ -432,10 +437,18 @@ function MobileMenu({ tab, setTab }) {
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 160, damping: 18 }}
       style={{
-        width: "100vw", position: "fixed", left: 0, bottom: 0, background: "#fff",
-        borderTop: "1px solid #f0f0f1", boxShadow: "0 -2px 12px #e9f1fe11", height: 66,
-        zIndex: 111, display: "flex", justifyContent: "space-around", alignItems: "center",
-        paddingBottom: "env(safe-area-inset-bottom, 10px)"
+        width: "100vw",
+        position: "fixed",
+        left: 0,
+        bottom: 0,
+        background: "#fff",
+        borderTop: "1px solid #f0f0f1",
+        boxShadow: "0 -2px 12px #e9f1fe11",
+        height: 66,
+        zIndex: 111,
+        display: "flex",
+        justifyContent: "space-around",
+        alignItems: "center",
       }}>
       <TabItem icon={<FaHome />} label="Главная" active={tab === "home"} onClick={() => setTab("home")} />
       <TabItem icon={<FaAppleAlt />} label="Кальк." active={tab === "calc"} onClick={() => setTab("calc")} />
