@@ -110,25 +110,35 @@ function App() {
               style={{ width:"100%" }}
               onSubmit={e => { e.preventDefault(); if(name.trim()) setStage("onboard"); }}>
                 <input
-                  ref={inputRef}
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Твоё имя"
-                  style={{
-                    fontSize:21,padding:"17px 14px",width:"99%",border:"1.2px solid #e3ebf3",
-                    borderRadius:15,background:"#f6f8fc",outline:"none",marginBottom:19,
-                    color:"#222",fontWeight:700,boxSizing:"border-box"
-                  }}
-                  autoFocus
-                  required
-                  onKeyDown={e => {
-  if (e.key === "Enter" && name.trim()) {
-    e.preventDefault(); // предотвращает отправку формы
-    setStage("onboard"); // переходит на следующий этап
-  }
-}}
-                  />
+  ref={inputRef}
+  type="text"
+  value={name}
+  onChange={e => setName(e.target.value)}
+  placeholder="Твоё имя"
+  style={{
+    fontSize: 21,
+    padding: "17px 14px",
+    width: "99%",
+    border: "1.2px solid #e3ebf3",
+    borderRadius: 15,
+    background: "#f6f8fc",
+    outline: "none",
+    marginBottom: 19,
+    color: "#222",
+    fontWeight: 700,
+    boxSizing: "border-box"
+  }}
+  autoFocus
+  required
+  onKeyDown={e => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // предотвращает действие Enter
+      if (name.trim()) {
+        setStage("onboard"); // переходит на следующий этап
+      }
+    }
+  }}
+/>
                 <button type="submit"
                   style={{width:"100%",padding:"16px 0",fontWeight:800,fontSize:20,
                     background:"linear-gradient(135deg,#68e0cf 60%,#6ccf83)",
