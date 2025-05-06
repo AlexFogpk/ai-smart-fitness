@@ -122,13 +122,7 @@ function App() {
               fontSize: 26, fontWeight: 800, color: "#1d3557",
               minHeight: 38, marginBottom: 21, marginTop: 5
             }} />
-            <form
-              style={{ width: "100%" }}
-              autoComplete="off"
-              onSubmit={e => {
-                e.preventDefault();
-                if (name.trim().length > 1) setStage("onboard");
-              }}>
+            <form style={{ width: "100%" }} autoComplete="off">
               <input
                 ref={inputRef}
                 type="text"
@@ -150,9 +144,12 @@ function App() {
                 }}
                 required
                 minLength={2}
+                onKeyDown={e => {
+                  if (e.key === "Enter") e.preventDefault();
+                }}
               />
               <motion.button
-                type="submit"
+                type="button"
                 whileTap={{ scale: 0.96 }}
                 style={{
                   width: "100%", padding: "16px 0", fontWeight: 800, fontSize: 20,
@@ -160,6 +157,10 @@ function App() {
                   color: "#fff", border: 0, borderRadius: 15, cursor: "pointer", marginTop: 2,
                   boxShadow: "0 2px 14px #63d1c32c", transition: ".2s"
                 }}
+                onClick={() => {
+                  if (name.trim().length > 1) setStage("onboard");
+                }}
+                disabled={name.trim().length < 2}
               >Продолжить</motion.button>
             </form>
           </motion.div>
