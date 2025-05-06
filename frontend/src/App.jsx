@@ -131,21 +131,21 @@ function App() {
   const [aiLoading, setAiLoading] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
 
-  // Кнопка гамбургера (всегда сверху слева)
-  const Hamburger = (
-    <button
-      style={{
-        position: "fixed", left: 18, top: 18, zIndex: 300,
-        background: "#fff", border: "none", borderRadius: "7px",
-        padding: "11px 13px", boxShadow: "0 2px 10px #b8e7fa40",
-        cursor: "pointer", fontSize: 22, color: "#229ED9"
-      }}
-      onClick={() => setSideMenuOpen(true)}
-      aria-label="Меню"
-    >
-      <FaBars />
-    </button>
-  );
+  // Кнопка гамбургера (всегда сверху справа)
+ const Hamburger = (
+  <button
+    style={{
+      position: "fixed", right: 18, top: 18, zIndex: 300,
+      background: "#fff", border: "none", borderRadius: "7px",
+      padding: "11px 13px", boxShadow: "0 2px 10px #b8e7fa40",
+      cursor: "pointer", fontSize: 22, color: "#229ED9"
+    }}
+    onClick={() => setSideMenuOpen(true)}
+    aria-label="Меню"
+  >
+    <FaBars />
+  </button>
+);
 
   // Splash
   if (stage === "splash") {
