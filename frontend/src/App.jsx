@@ -218,10 +218,6 @@ function App() {
     </div>
   );
 }
-
-// Остальной код (HomeMobile, CaloriesRing и т.д.) без изменений
-
-export default App;
   // Основной интерфейс
   return (
     <div style={{ minHeight: "100vh", background: "#fafbfc", fontFamily: "system-ui", position: "relative" }}>
