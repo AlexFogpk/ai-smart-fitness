@@ -1,41 +1,7 @@
-:root {
-  --color-primary: #229ED9;
-  --color-accent: #1ba05e;
-  --color-bg: #f6fbff;
-  --color-bg-soft: #e7f6ff;
-  --color-card: #fff;
-  --color-border: #e9f4fc;
-  --color-shadow: #d3eafc33;
-  --radius-main: 18px;
-  --radius-card: 22px;
-  --font-main: 'system-ui', Arial, sans-serif;
-  --transition-main: .2s cubic-bezier(.55,.08,.39,.98);
-}
-body {
-  background: var(--color-bg);
-  font-family: var(--font-main);
-  color: #1d3557;
-  margin: 0;
-  padding: 0;
-}
-.card {
-  background: var(--color-card);
-  border-radius: var(--radius-card);
-  box-shadow: 0 2px 14px var(--color-shadow);
-  padding: 24px;
-}
-.button-main {
-  background: linear-gradient(135deg, var(--color-primary) 70%, #53ddc9);
-  color: #fff;
-  font-weight: 800;
-  font-size: 18px;
-  border: none;
-  border-radius: 13px;
-  padding: 13px 45px;
-  cursor: pointer;
-  box-shadow: 0 2px 12px #3bafe82a;
-  transition: background var(--transition-main), color var(--transition-main);
-}
-.button-main:hover {
-  background: linear-gradient(135deg, #1ba05e 60%, var(--color-primary));
-}
+/* 
+  The CSS variables and rules previously in this file 
+  have been migrated to the MUI theme in main.jsx 
+  or are handled by MUI CssBaseline and component styles.
+
+  This file can likely be deleted if no other global styles are needed here.
+*/

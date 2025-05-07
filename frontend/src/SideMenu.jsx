@@ -1,84 +1,126 @@
 import React from "react";
 import { FaHome, FaAppleAlt, FaRobot, FaUtensils, FaCog, FaDumbbell, FaUserCircle, FaSignOutAlt, FaInfoCircle } from "react-icons/fa";
-import "./SideMenu.css";
+// import "./SideMenu.css"; // Will be removed or replaced by MUI styles
+
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Divider from '@mui/material/Divider';
+import Box from '@mui/material/Box';
+import Typography from "@mui/material/Typography";
+
+const drawerWidth = 290;
 
 export default function SideMenu({ open, onClose, current, onSelect, profile = { name: "Гость" } }) {
+  const menuItems = [
+    { id: "home", label: "Главная", icon: <FaHome /> },
+    { id: "calc", label: "Калькулятор", icon: <FaAppleAlt /> },
+    { id: "meals", label: "Мои блюда", icon: <FaUtensils /> },
+    { id: "programs", label: "Программы тренировок", icon: <FaDumbbell />, accent: true },
+    { id: "chat", label: "ИИ-чат", icon: <FaRobot /> },
+    { id: "settings", label: "Настройки", icon: <FaCog /> },
+  ];
+
+  const bottomMenuItems = [
+    { id: "about", label: "О приложении", icon: <FaInfoCircle />, onClick: () => console.log("About clicked") }, // Replace with actual handler
+    { id: "logout", label: "Выйти", icon: <FaSignOutAlt />, onClick: () => console.log("Logout clicked") }, // Replace with actual handler
+  ];
+
+  const drawerContent = (
+    <Box
+      sx={{ width: drawerWidth, display: 'flex', flexDirection: 'column', height: '100%' }}
+      role="presentation"
+    >
+      {/* Профиль */}
+      <ListItem sx={{ pt: 3, pb: 2, mb: 1, backgroundColor: 'action.hover' }}>
+        <ListItemIcon sx={{ minWidth: 0, mr: 2, color: 'primary.main' }}>
+          <FaUserCircle size={46} />
+        </ListItemIcon>
+        <ListItemText 
+          primary={<Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>{profile.name || "Гость"}</Typography>}
+        />
+      </ListItem>
+      
+      {/* Навигация */}
+      <List sx={{ flexGrow: 1, px:1 }}>
+        {menuItems.map((item) => (
+          <ListItemButton
+            key={item.id}
+            selected={current === item.id}
+            onClick={() => { onSelect(item.id); onClose(); }}
+            sx={theme => ({
+              borderRadius: '12px', // Adjusted border radius
+              mb: 0.5,
+              ...(item.accent && {
+                backgroundColor: theme.palette.secondary.light,
+                color: theme.palette.secondary.contrastText,
+                '&:hover': {
+                  backgroundColor: theme.palette.secondary.main,
+                },
+                '&.Mui-selected': {
+                    backgroundColor: theme.palette.secondary.dark, 
+                    color: theme.palette.secondary.contrastText,
+                    '& .MuiListItemIcon-root': {
+                        color: theme.palette.secondary.contrastText,
+                    }
+                }
+              }),
+              '&.Mui-selected': {
+                backgroundColor: theme.palette.primary.light,
+                color: theme.palette.primary.contrastText,
+                boxShadow: '0 2px 7px #e7f6ff55',
+                '& .MuiListItemIcon-root': {
+                    color: theme.palette.primary.contrastText,
+                }
+              },
+            })}
+          >
+            <ListItemIcon sx={{color: item.accent ? 'inherit' : 'primary.main' }}>{item.icon}</ListItemIcon>
+            <ListItemText 
+              primary={item.label} 
+              primaryTypographyProps={{ fontWeight: (current === item.id || item.accent) ? 'bold' : 'medium'}} // Corrected fontWeight logic
+            />
+          </ListItemButton>
+        ))}
+      </List>
+
+      <Divider />
+
+      {/* Нижний блок */}
+      <List sx={{ px: 1, py:1 }}>
+        {bottomMenuItems.map((item) => (
+          <ListItemButton key={item.id} onClick={item.onClick} sx={{ borderRadius: 2 }}>
+            <ListItemIcon sx={{ color: 'text.secondary' }}>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.label} />
+          </ListItemButton>
+        ))}
+      </List>
+    </Box>
+  );
+
   return (
-    <>
-      <div className={`side-menu-backdrop${open ? " open" : ""}`} onClick={onClose} />
-      <nav className={`side-menu${open ? " open" : ""}`}>
-        {/* Профиль */}
-        <div className="side-profile-block">
-          <FaUserCircle size={46} color="#229ED9" className="side-profile-avatar" />
-          <div>
-            <div className="side-profile-name">{profile.name || "Гость"}</div>
-            {/* Если будет смена имени — вынести сюда кнопку */}
-          </div>
-        </div>
-        {/* Навигация */}
-        <div className="side-menu-nav">
-          <SideMenuItem
-            icon={<FaHome />}
-            label="Главная"
-            active={current === "home"}
-            onClick={() => { onSelect("home"); onClose(); }}
-          />
-          <SideMenuItem
-            icon={<FaAppleAlt />}
-            label="Калькулятор"
-            active={current === "calc"}
-            onClick={() => { onSelect("calc"); onClose(); }}
-          />
-          <SideMenuItem
-            icon={<FaUtensils />}
-            label="Мои блюда"
-            active={current === "meals"}
-            onClick={() => { onSelect("meals"); onClose(); }}
-          />
-          <SideMenuItem
-            icon={<FaDumbbell />}
-            label="Программы тренировок"
-            active={current === "programs"}
-            accent
-            onClick={() => { onSelect("programs"); onClose(); }}
-          />
-          <SideMenuItem
-            icon={<FaRobot />}
-            label="ИИ-чат"
-            active={current === "chat"}
-            onClick={() => { onSelect("chat"); onClose(); }}
-          />
-          <SideMenuItem
-            icon={<FaCog />}
-            label="Настройки"
-            active={current === "settings"}
-            onClick={() => { onSelect("settings"); onClose(); }}
-          />
-        </div>
-        {/* Нижний блок */}
-        <div className="side-menu-bottom">
-          <button className="side-menu-bottom-btn" title="О приложении">
-            <FaInfoCircle style={{marginRight: 7}} />
-            О приложении
-          </button>
-          <button className="side-menu-bottom-btn" title="Выйти">
-            <FaSignOutAlt style={{marginRight: 7}} />
-            Выйти
-          </button>
-        </div>
-      </nav>
-    </>
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      sx={{
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          borderTopLeftRadius: 22, // from SideMenu.css
+          borderBottomLeftRadius: 22, // from SideMenu.css
+          backgroundColor: 'rgba(255,255,255,0.97)', // from SideMenu.css
+          backdropFilter: 'blur(8px)', // from SideMenu.css
+          boxShadow: '-4px 0 28px #d3eafc33', // from SideMenu.css
+        },
+      }}
+    >
+      {drawerContent}
+    </Drawer>
   );
 }
 
-function SideMenuItem({ icon, label, active, onClick, accent }) {
-  return (
-    <div
-      className={`side-menu-item${active ? " active" : ""}${accent ? " accent" : ""}`}
-      onClick={onClick}
-    >
-      <span className="side-menu-icon">{icon}</span>
-      <span className="side-menu-label">{label}</span>
-    </div>
-  );
-}
+// SideMenuItem component is no longer needed as its logic is integrated above

@@ -11,8 +11,18 @@ import {
   MealsMobile,
   MacroBar,
 } from "./components/MobileExtra";
-import './theme.css';
 import Header from "./Header";
+
+// MUI Imports
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import { styled } from '@mui/material/styles';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -108,35 +118,47 @@ function App() {
 
   // Кнопка гамбургера
   const Hamburger = (
-    <button
-      style={{
-        position: "fixed", right: 18, top: 18, zIndex: 300,
-        background: "#fff", border: "none", borderRadius: "7px",
-        padding: "11px 13px", boxShadow: "0 2px 10px #b8e7fa40",
-        cursor: "pointer", fontSize: 22, color: "#229ED9"
-      }}
-      onClick={() => setSideMenuOpen(true)}
+    <IconButton
       aria-label="Меню"
+      onClick={() => setSideMenuOpen(true)}
+      sx={{
+        position: "fixed", 
+        right: 18, 
+        top: 18, 
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        backgroundColor: 'background.paper',
+        color: 'primary.main',
+        padding: '10px',
+        boxShadow: 3,
+        '&:hover': {
+          backgroundColor: 'grey.100',
+        }
+      }}
     >
-      <FaBars />
-    </button>
+      <FaBars fontSize="inherit" />
+    </IconButton>
   );
 
   // Splash
   if (stage === "splash") {
     return (
-      <div style={{
-        minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#eef5fe 30%,#dffcf9 90%)",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
+      <Box sx={{
+        minHeight: "100vh", 
+        width: "100vw", 
+        background: "linear-gradient(120deg,#eef5fe 30%,#dffcf9 90%)",
+        display: "flex", 
+        flexDirection: "column", 
+        alignItems: "center", 
+        justifyContent: "center"
       }}>
         <LogoRobot />
-        <div style={{
-          fontSize: 26, color: "#229ED9", fontWeight: 800, letterSpacing: ".01em", marginTop: 15
-        }}>
+        <Typography variant="h4" component="div" sx={{ color: "primary.main", fontWeight: 800, letterSpacing: ".01em", mt: 2 }}>
           SmartFitness AI
-        </div>
-        <div style={{ marginTop: 19, fontSize: 17, color: "#7dbbf3", fontWeight: 600, letterSpacing: ".02em" }}>Загрузка...</div>
-      </div>
+        </Typography>
+        <Typography variant="subtitle1" component="div" sx={{ mt: 1, color: "text.secondary", fontWeight: 600, letterSpacing: ".02em" }}>
+          Загрузка...
+        </Typography>
+      </Box>
     );
   }
 
@@ -202,16 +224,19 @@ function App() {
           />
         )}
         {tab === "programs" && (
-          <div style={{
-            maxWidth: 430, margin: "60px auto 0 auto", padding: "28px", background: "#fff", borderRadius: 18,
-            boxShadow: "0 2px 14px #ececec", minHeight: 220
-          }}>
-            <h2 style={{ color: "#229ED9", fontWeight: 800 }}>Программы тренировок</h2>
-            <div style={{ color: "#333", fontSize: 17, marginTop: 20 }}>
-              {/* Тут сделай свою логику/контент для программ */}
-              Скоро здесь появятся ваши программы тренировок!
-            </div>
-          </div>
+          <Container maxWidth="xs" sx={{ pt: { xs: 2, sm: 3 }, pb: 2, mt: {xs: 5, sm: 7} }}>
+            <Card sx={{ borderRadius: '16px', boxShadow: 3, p: 2 }}>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="h5" component="h2" sx={{ fontWeight: 800, color: "primary.main", mb: 2 }}>
+                  Программы тренировок
+                </Typography>
+                <Typography variant="body1" sx={{ color: "text.secondary" }}>
+                  Скоро здесь появятся ваши программы тренировок!
+                </Typography>
+                 {/* Тут сделай свою логику/контент для программ */}
+              </CardContent>
+            </Card>
+          </Container>
         )}
       </AnimatePresence>
     </div>
@@ -222,140 +247,147 @@ function App() {
 function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }}
-      transition={{ duration: .6 }}
-      style={{
-        maxWidth: 430,
-        margin: "0 auto",
-        padding: "18px 0 10px 0",
-        display: "flex",
-        flexDirection: "column",
-        gap: 16,
-        alignItems: "center",
-        minHeight: "calc(100vh - 72px)",
-        boxSizing: "border-box"
-      }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 30 }}
+      transition={{ duration: 0.6 }}
     >
-      <div style={{
-        width: "93%",
-        background: "#fff",
-        borderRadius: 22,
-        boxShadow: "0 2px 14px #ececec",
-        padding: "25px 0 18px 0",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center"
-      }}>
-        <CaloriesRing value={summary.calories} max={kbju.calories} />
-        <div style={{ fontWeight: 800, fontSize: 32, color: "#222", marginTop: 9 }}>{summary.calories}</div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: "#b9b9b9", marginBottom: 10 }}>
-          <span style={{ color: "#229ED9", fontWeight: 800 }}>{kbju.calories}</span> цель
-        </div>
-        <MacroBar label="Углеводы" value={summary.carb} max={kbju.carb} color="#3bafe8" />
-        <MacroBar label="Белки" value={summary.protein} max={kbju.protein} color="#5fc77f" />
-        <MacroBar label="Жиры" value={summary.fat} max={kbju.fat} color="#ffb24a" />
-        <motion.button
-          whileTap={{ scale: 0.93 }}
-          style={{
-            marginTop: 20,
-            background: "linear-gradient(135deg,#35c7a5 60%,#229ED9)",
-            color: "#fff",
-            fontWeight: 800,
-            fontSize: 17,
-            border: "none",
-            borderRadius: 13,
-            padding: "12px 0",
-            cursor: "pointer",
-            boxShadow: "0 2px 8px #53ddc94d",
-            width: "85%",
-            maxWidth: 260
-          }}
-          onClick={onGoToChat}
-        >ИИ Тренер</motion.button>
-      </div>
-      <div style={{
-        width: "93%",
-        background: "#fff",
-        borderRadius: 18,
-        boxShadow: "0 2px 14px #ececec",
-        padding: "18px 14px 19px 14px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center"
-      }}>
-        <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 2 }}>Сегодня</div>
-        <div style={{ color: "#888", fontWeight: 600, fontSize: 14, marginBottom: 10 }}>{getDayString()}</div>
-        <motion.button
-          onClick={onGoToCalc}
-          whileTap={{ scale: 0.95 }}
-          style={{
-            background: "linear-gradient(135deg,#3bafe8 80%,#53ddc9)",
-            color: "#fff",
-            fontWeight: 800,
-            fontSize: 17,
-            border: "none",
-            borderRadius: 13,
-            padding: "12px 0",
-            width: "100%",
-            margin: "10px 0 0 0",
-            cursor: "pointer",
-            boxShadow: "0 2px 12px #3bafe82a"
-          }}>
-          Добавить еду
-        </motion.button>
-      </div>
-      <div style={{
-        width: "93%",
-        background: "#fff",
-        borderRadius: 18,
-        boxShadow: "0 2px 14px #ececec",
-        padding: "15px 14px 22px 14px",
-        minHeight: 80
-      }}>
-        <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>Последние блюда</div>
-        {allMeals.length === 0 ? (
-          <div style={{ color: "#aaa", fontSize: 15, marginTop: 12, textAlign: "center" }}>
-            <span role="img" aria-label="plate" style={{ fontSize: 22 }}>🍽️</span>
-            <br />
-            <span>Пока ничего не добавлено</span>
-          </div>
-        ) : (
-          allMeals.slice(-3).reverse().map((m, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 15, marginBottom: 2 }}>
-              <span>{m.emoji || "🍽️"} {m.name}</span>
-              <span style={{ fontWeight: 700 }}>{m.grams} г</span>
-            </div>
-          ))
-        )}
-      </div>
+      <Container maxWidth="sm" sx={{ pt: 2, pb: 1, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', minHeight: 'calc(100vh - 72px)' }}>
+        <Card sx={{ width: '93%', borderRadius: '16px', boxShadow: 3 }}>
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3, px: 2 }}>
+            <CaloriesRing value={summary.calories} max={kbju.calories} />
+            <Typography variant="h4" component="div" sx={{ fontWeight: 800, color: 'text.primary', mt: 1 }}>
+              {summary.calories}
+            </Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.secondary', mb: 1 }}>
+              <Typography component="span" sx={{ color: 'primary.main', fontWeight: 800 }}>
+                {kbju.calories}
+              </Typography> цель
+            </Typography>
+            <Box sx={{ width: '100%', px: 2, boxSizing: 'border-box' }}>
+              <MacroBar label="Углеводы" value={summary.carb} max={kbju.carb} color="#3bafe8" />
+              <MacroBar label="Белки" value={summary.protein} max={kbju.protein} color="#5fc77f" />
+              <MacroBar label="Жиры" value={summary.fat} max={kbju.fat} color="#ffb24a" />
+            </Box>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={onGoToChat}
+              sx={{
+                mt: 2.5,
+                fontWeight: 800,
+                fontSize: 17,
+                borderRadius: '12px',
+                width: '85%',
+                maxWidth: 260,
+                py: 1.5,
+                background: 'linear-gradient(135deg,#35c7a5 60%,#229ED9)', // Keep custom gradient for now
+                '&:hover': {
+                  background: 'linear-gradient(135deg,#2da98e 60%,#1e8ac8)', // Darken gradient on hover
+                }
+              }}
+            >
+              ИИ Тренер
+            </Button>
+          </CardContent>
+        </Card>
+        <Card sx={{ width: '93%', borderRadius: '16px', boxShadow: 3 }}>
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2.5, px: 2 }}>
+            <Typography variant="h6" component="div" sx={{ fontWeight: 800, mb: 0.25 }}>Сегодня</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: 14, mb: 1.25 }}>{getDayString()}</Typography>
+            <Button
+              variant="contained"
+              onClick={onGoToCalc}
+              sx={{
+                fontWeight: 800,
+                fontSize: 17,
+                borderRadius: '12px',
+                padding: '12px 0',
+                width: '100%',
+                mt: 1.25,
+                background: 'linear-gradient(135deg,#3bafe8 80%,#53ddc9)', // Keep custom gradient
+                 '&:hover': {
+                  background: 'linear-gradient(135deg,#329cd6 80%,#4ac4b8)', // Darken gradient on hover
+                }
+              }}
+            >
+              Добавить еду
+            </Button>
+          </CardContent>
+        </Card>
+        <Card sx={{ width: '93%', borderRadius: '16px', boxShadow: 3, minHeight: 80 }}>
+          <CardContent sx={{ py: 2, px: 2 }}>
+            <Typography variant="h6" component="div" sx={{ fontWeight: 800, fontSize: 16, mb: 0.5 }}>Последние блюда</Typography>
+            {allMeals.length === 0 ? (
+              <Box sx={{ color: 'text.secondary', fontSize: 15, mt: 1.5, textAlign: 'center' }}>
+                <span role="img" aria-label="plate" style={{ fontSize: 22 }}>🍽️</span>
+                <br />
+                <Typography variant="body2">Пока ничего не добавлено</Typography>
+              </Box>
+            ) : (
+              allMeals.slice(-3).reverse().map((m, i) => (
+                <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 15, mb: 0.25 }}>
+                  <Typography variant="body2">{m.emoji || "🍽️"} {m.name}</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>{m.grams} г</Typography>
+                </Box>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </Container>
     </motion.div>
   );
 }
 
 function CaloriesRing({ value, max }) {
   const pct = Math.min(100, (value / max) * 100 || 0);
-  const size = 108, r = 44, c = 2 * Math.PI * r;
+  const size = 108;
+
   return (
-    <div style={{ position: "relative", width: size, height: size, marginBottom: 6 }}>
-      <svg width={size} height={size}>
-        <circle r={r} cx={size/2} cy={size/2} stroke="#f2f2f2" strokeWidth={9} fill="none" />
-        <motion.circle
-          r={r} cx={size/2} cy={size/2}
-          fill="none" stroke="#229ED9" strokeWidth={12}
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={c - (c * pct / 100)}
-          animate={{ strokeDashoffset: c - (c * pct / 100) }}
-          transition={{ duration: .7 }}
-        />
-      </svg>
-      <div style={{
-        position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)",
-        display: "flex", flexDirection: "column", alignItems: "center"
-      }}>
+    <Box sx={{ position: 'relative', display: 'inline-flex', width: size, height: size, mb: 0.75 }}>
+      <CircularProgress
+        variant="determinate"
+        value={100}
+        size={size}
+        thickness={4}
+        sx={{
+          color: (theme) => theme.palette.grey[200],
+          position: 'absolute',
+          left: 0,
+          top: 0,
+        }}
+      />
+      <CircularProgress
+        variant="determinate"
+        value={pct}
+        size={size}
+        thickness={4}
+        sx={{
+          color: 'primary.main', // Or your specific theme color e.g. "#229ED9"
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          '& .MuiCircularProgress-circle': {
+            strokeLinecap: 'round',
+          },
+        }}
+      />
+      <Box
+        sx={{
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          position: 'absolute',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <PiBowlFoodFill color="#229ED9" size={38} />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
 

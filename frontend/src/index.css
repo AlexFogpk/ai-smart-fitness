@@ -26,8 +26,8 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  /* min-width: 320px; */
+  /* min-height: 100vh; */
 }
 
 h1 {
@@ -66,3 +66,12 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* 
+  Most other styles from the original index.css (like default colors, backgrounds,
+  font-family, h1, button, a tag styles) are now handled by the 
+  MUI ThemeProvider, CssBaseline, and MUI components themselves.
+  Global styles for HTML elements like h1, button, a should generally be avoided 
+  when using a component library like MUI to prevent conflicts; 
+  use MUI Typography, Button, Link components and theme them instead.
+*/
