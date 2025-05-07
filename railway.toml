@@ -1,0 +1,21 @@
+# railway.toml
+
+[build]
+builder = "nixpacks"
+
+nixpacksPlan = """
+[phases.setup]
+nixPkgs = ["...", "python310"]
+
+[phases.install]
+cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
+
+[start]
+command = "python3 -m uvicorn app:app --host 0.0.0.0 --port $PORT"
+"""
+
+[deploy]
+startCommand = "python3 -m uvicorn app:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+healthcheckInterval = 15
