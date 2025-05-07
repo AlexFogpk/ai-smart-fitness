@@ -59,7 +59,7 @@ function App() {
   const [tab, setTab] = useState("home");
   const [profile, setProfile] = useState(defaultProfile);
 
-  // Имя Telegram (оставляем, если где-то нужно)
+  // Имя Telegram (можно оставить, если используется где-то ещё)
   const [telegramName, setTelegramName] = useState("");
   useEffect(() => {
     if (
@@ -71,12 +71,14 @@ function App() {
     }
   }, []);
 
-  // Только splash -> app, 3 секунды
+  // Splash (загрузка) — увеличено до 3 секунд и сразу переход в основной интерфейс
   useEffect(() => {
     if (stage === "splash") {
       setTimeout(() => setStage("app"), 3000);
     }
   }, [stage]);
+
+  // --- ВАЖНО: удалено всё, что связано с welcome, typed и приветствием ---
 
   const kbju = getKBJU(profile);
   const [mealsByType, setMealsByType] = useState(initialMealsByType);
@@ -103,7 +105,7 @@ function App() {
   const [aiLoading, setAiLoading] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
 
-  // Кнопка гамбургера (всегда сверху справа)
+  // Кнопка гамбургера
   const Hamburger = (
     <button
       style={{
