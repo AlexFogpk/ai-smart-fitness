@@ -53,7 +53,7 @@ async def telegram_webhook_endpoint(request: Request):
         data = await request.json()
         # print("Получен запрос от Telegram:", data, file=sys.stderr) # Uncomment for debugging
         
-        if 'ptb_application' not in app.state:
+        if not hasattr(app.state, 'ptb_application'):
             print("PTB Application not initialized in app.state", file=sys.stderr)
             raise HTTPException(status_code=500, detail="Bot application not initialized")
 
