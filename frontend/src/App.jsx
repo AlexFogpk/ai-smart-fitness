@@ -54,15 +54,12 @@ const initialMealsByType = {
 };
 
 // ------ Главный компонент ------
-// ... (импорты и утилиты не меняются)
-
 function App() {
   const [stage, setStage] = useState("splash");
   const [tab, setTab] = useState("home");
   const [profile, setProfile] = useState(defaultProfile);
 
-  // Имя Telegram
-  // (можно оставить, если используется в других местах)
+  // Имя Telegram (оставляем, если где-то нужно)
   const [telegramName, setTelegramName] = useState("");
   useEffect(() => {
     if (
@@ -74,14 +71,12 @@ function App() {
     }
   }, []);
 
-  // Splash (загрузка) — увеличиваем до 3 секунд и переходим сразу в app
+  // Только splash -> app, 3 секунды
   useEffect(() => {
     if (stage === "splash") {
-      setTimeout(() => setStage("app"), 3000); // 3 секунды
+      setTimeout(() => setStage("app"), 3000);
     }
   }, [stage]);
-
-  // Удаляем блоки, связанные с welcome
 
   const kbju = getKBJU(profile);
   const [mealsByType, setMealsByType] = useState(initialMealsByType);
@@ -108,6 +103,7 @@ function App() {
   const [aiLoading, setAiLoading] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
 
+  // Кнопка гамбургера (всегда сверху справа)
   const Hamburger = (
     <button
       style={{
@@ -151,83 +147,6 @@ function App() {
         current={tab}
         onSelect={setTab}
         profile={profile}
-      />
-      <AnimatePresence mode="wait">
-        {tab === "home" && (
-          <HomeMobile
-            profile={profile}
-            kbju={kbju}
-            summary={summary}
-            allMeals={allMeals}
-            onGoToChat={() => setTab("chat")}
-            onGoToCalc={() => setTab("calc")}
-          />
-        )}
-        {tab === "calc" && (
-          <CalculatorMobile
-            kbju={kbju}
-            mealsByType={mealsByType}
-            setMealsByType={setMealsByType}
-            calcType={calcType}
-            setCalcType={setCalcType}
-            calcMode={calcMode}
-            setCalcMode={setCalcMode}
-            aiLoading={aiLoading}
-            setAiLoading={setAiLoading}
-            onBack={() => setTab("home")}
-          />
-        )}
-        {tab === "chat" && (
-          <AIChatMobile
-            messages={messages}
-            setMessages={setMessages}
-            onBack={() => setTab("home")}
-            username={profile.name}
-          />
-        )}
-        {tab === "settings" && (
-          <SettingsMobile
-            profile={profile}
-            setProfile={setProfile}
-            editName={editName}
-            setEditName={setEditName}
-            newName={newName}
-            setNewName={setNewName}
-            onBack={() => setTab("home")}
-          />
-        )}
-        {tab === "meals" && (
-          <MealsMobile
-            mealsByType={mealsByType}
-            onBack={() => setTab("home")}
-          />
-        )}
-        {tab === "programs" && (
-          <div style={{
-            maxWidth: 430, margin: "60px auto 0 auto", padding: "28px", background: "#fff", borderRadius: 18,
-            boxShadow: "0 2px 14px #ececec", minHeight: 220
-          }}>
-            <h2 style={{ color: "#229ED9", fontWeight: 800 }}>Программы тренировок</h2>
-            <div style={{ color: "#333", fontSize: 17, marginTop: 20 }}>
-              {/* Тут сделай свою логику/контент для программ */}
-              Скоро здесь появятся ваши программы тренировок!
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-  // Основной интерфейс
-  return (
-    <div style={{ minHeight: "100vh", background: "#fafbfc", fontFamily: "system-ui", position: "relative" }}>
-      {Hamburger}
-     <SideMenu
-        open={sideMenuOpen}
-        onClose={() => setSideMenuOpen(false)}
-        current={tab}
-        onSelect={setTab}
-        profile={profile} // <-- вот это!
       />
       <AnimatePresence mode="wait">
         {tab === "home" && (
