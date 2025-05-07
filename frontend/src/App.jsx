@@ -54,12 +54,15 @@ const initialMealsByType = {
 };
 
 // ------ Главный компонент ------
+// ... (импорты и утилиты не меняются)
+
 function App() {
   const [stage, setStage] = useState("splash");
   const [tab, setTab] = useState("home");
   const [profile, setProfile] = useState(defaultProfile);
 
   // Имя Telegram
+  // (можно оставить, если используется в других местах)
   const [telegramName, setTelegramName] = useState("");
   useEffect(() => {
     if (
@@ -71,41 +74,14 @@ function App() {
     }
   }, []);
 
-  // Splash (загрузка)
+  // Splash (загрузка) — увеличиваем до 3 секунд и переходим сразу в app
   useEffect(() => {
     if (stage === "splash") {
-      setTimeout(() => setStage("welcome"), 1200);
+      setTimeout(() => setStage("app"), 3000); // 3 секунды
     }
   }, [stage]);
 
-  // Welcome (приветствие)
-  const [typed, setTyped] = useState("");
-  useEffect(() => {
-    if (stage === "welcome") {
-      const name = telegramName || "друг";
-      const full = `Добро пожаловать, ${name}!`;
-      setTyped("");
-      let i = 0;
-      const typing = setInterval(() => {
-        setTyped(txt => {
-          if (i < full.length) {
-            i++;
-            return full.slice(0, i);
-          } else {
-            clearInterval(typing);
-            return full;
-          }
-        });
-      }, 34);
-      return () => clearInterval(typing);
-    }
-  }, [stage, telegramName]);
-
-  useEffect(() => {
-    if (stage === "welcome" && telegramName && !profile.name) {
-      setProfile(p => ({ ...p, name: telegramName }));
-    }
-  }, [stage, telegramName, profile.name]);
+  // Удаляем блоки, связанные с welcome
 
   const kbju = getKBJU(profile);
   const [mealsByType, setMealsByType] = useState(initialMealsByType);
@@ -132,21 +108,20 @@ function App() {
   const [aiLoading, setAiLoading] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
 
-  // Кнопка гамбургера (всегда сверху справа)
- const Hamburger = (
-  <button
-    style={{
-      position: "fixed", right: 18, top: 18, zIndex: 300,
-      background: "#fff", border: "none", borderRadius: "7px",
-      padding: "11px 13px", boxShadow: "0 2px 10px #b8e7fa40",
-      cursor: "pointer", fontSize: 22, color: "#229ED9"
-    }}
-    onClick={() => setSideMenuOpen(true)}
-    aria-label="Меню"
-  >
-    <FaBars />
-  </button>
-);
+  const Hamburger = (
+    <button
+      style={{
+        position: "fixed", right: 18, top: 18, zIndex: 300,
+        background: "#fff", border: "none", borderRadius: "7px",
+        padding: "11px 13px", boxShadow: "0 2px 10px #b8e7fa40",
+        cursor: "pointer", fontSize: 22, color: "#229ED9"
+      }}
+      onClick={() => setSideMenuOpen(true)}
+      aria-label="Меню"
+    >
+      <FaBars />
+    </button>
+  );
 
   // Splash
   if (stage === "splash") {
@@ -166,49 +141,87 @@ function App() {
     );
   }
 
-  // Welcome
-  if (stage === "welcome") {
-    return (
-      <div style={{
-        minHeight: "100vh", width: "100vw", background: "linear-gradient(120deg,#f3f7fa 10%,#f2fff6 90%)",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
-      }}>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8 }}
-          style={{
-            padding: "32px 16px 28px 16px", background: "#fff", borderRadius: 27,
-            boxShadow: "0 4px 38px #ddeff940", width: "89vw", maxWidth: 390, minHeight: 230,
-            display: "flex", flexDirection: "column", alignItems: "center"
-          }}>
+  // Основной интерфейс
+  return (
+    <div style={{ minHeight: "100vh", background: "#fafbfc", fontFamily: "system-ui", position: "relative" }}>
+      {Hamburger}
+      <SideMenu
+        open={sideMenuOpen}
+        onClose={() => setSideMenuOpen(false)}
+        current={tab}
+        onSelect={setTab}
+        profile={profile}
+      />
+      <AnimatePresence mode="wait">
+        {tab === "home" && (
+          <HomeMobile
+            profile={profile}
+            kbju={kbju}
+            summary={summary}
+            allMeals={allMeals}
+            onGoToChat={() => setTab("chat")}
+            onGoToCalc={() => setTab("calc")}
+          />
+        )}
+        {tab === "calc" && (
+          <CalculatorMobile
+            kbju={kbju}
+            mealsByType={mealsByType}
+            setMealsByType={setMealsByType}
+            calcType={calcType}
+            setCalcType={setCalcType}
+            calcMode={calcMode}
+            setCalcMode={setCalcMode}
+            aiLoading={aiLoading}
+            setAiLoading={setAiLoading}
+            onBack={() => setTab("home")}
+          />
+        )}
+        {tab === "chat" && (
+          <AIChatMobile
+            messages={messages}
+            setMessages={setMessages}
+            onBack={() => setTab("home")}
+            username={profile.name}
+          />
+        )}
+        {tab === "settings" && (
+          <SettingsMobile
+            profile={profile}
+            setProfile={setProfile}
+            editName={editName}
+            setEditName={setEditName}
+            newName={newName}
+            setNewName={setNewName}
+            onBack={() => setTab("home")}
+          />
+        )}
+        {tab === "meals" && (
+          <MealsMobile
+            mealsByType={mealsByType}
+            onBack={() => setTab("home")}
+          />
+        )}
+        {tab === "programs" && (
           <div style={{
-            width: 60, height: 60, background: "#229ED9", borderRadius: "50%",
-            display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14, overflow: "hidden"
+            maxWidth: 430, margin: "60px auto 0 auto", padding: "28px", background: "#fff", borderRadius: 18,
+            boxShadow: "0 2px 14px #ececec", minHeight: 220
           }}>
-            <LogoRobot />
+            <h2 style={{ color: "#229ED9", fontWeight: 800 }}>Программы тренировок</h2>
+            <div style={{ color: "#333", fontSize: 17, marginTop: 20 }}>
+              {/* Тут сделай свою логику/контент для программ */}
+              Скоро здесь появятся ваши программы тренировок!
+            </div>
           </div>
-          <span style={{
-            fontSize: 25, fontWeight: 800, color: "#1d3557",
-            minHeight: 35, marginBottom: 22, marginTop: 3, letterSpacing: ".01em"
-          }}>
-            {typed}<span style={{ opacity: .5, fontWeight: 900 }}>|</span>
-          </span>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            style={{
-              marginTop: 7,
-              background: "linear-gradient(135deg,#229ED9 70%,#53ddc9)", color: "#fff",
-              fontWeight: 800, fontSize: 18, border: "none", borderRadius: 13,
-              padding: "13px 45px", margin: "9px 0 0 0", cursor: "pointer", boxShadow: "0 2px 12px #3bafe82a"
-            }}
-            onClick={() => setStage("app")}
-          >
-            Начать
-          </motion.button>
-        </motion.div>
-      </div>
-    );
-  }
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
+// Остальной код (HomeMobile, CaloriesRing и т.д.) без изменений
+
+export default App;
   // Основной интерфейс
   return (
     <div style={{ minHeight: "100vh", background: "#fafbfc", fontFamily: "system-ui", position: "relative" }}>
