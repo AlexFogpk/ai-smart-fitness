@@ -1,14 +1,10 @@
 [build]
 builder = "nixpacks"
 
-[nixpacks]
-python_version = "3.10"
-
-[nixpacks.install]
-cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
+[build.env]
+NIXPACKS_INSTALL_CMD = "apt-get update && apt-get install -y python3 python3-pip && pip install -r requirements.txt"
+PYTHON_VERSION = "3.10"
 
 [deploy]
 startCommand = "python3 -m uvicorn app:app --host 0.0.0.0 --port $PORT"
-healthcheckPath = "/"
-healthcheckTimeout = 100
-healthcheckInterval = 15
+restartPolicyType = "ON_FAILURE"
