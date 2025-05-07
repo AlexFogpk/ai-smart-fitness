@@ -13,6 +13,7 @@ import {
 } from "./components/MobileExtra";
 import './theme.css';
 import Header from "./Header";
+import './mainpage.css';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
