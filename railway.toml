@@ -1,21 +1,20 @@
-# railway.toml
+# railway.toml (Simplified Structure)
 
 [build]
+# Specify the builder
 builder = "nixpacks"
+# Directly specify Nix packages needed
+# Using "python310" for Python 3.10
+pkgs = ["python310"] 
+# Define the installation command(s)
+# Using && to chain commands
+installCommand = "pip install --upgrade pip && pip install -r requirements.txt"
 
-nixpacksPlan = """
-[phases.setup]
-nixPkgs = ["...", "python310"]
-
-[phases.install]
-cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
-
-[start]
-command = "python3 -m uvicorn app:app --host 0.0.0.0 --port $PORT"
-"""
-
+# Define deployment settings
 [deploy]
-startCommand = "python3 -m uvicorn app:app --host 0.0.0.0 --port $PORT"
-healthcheckPath = "/"
+# Specify the command to start the application
+startCommand = "python3 -m uvicorn app:app --host 0.0.0.0 --port $PORT" 
+# Optional health check
+healthcheckPath = "/" 
 healthcheckTimeout = 100
 healthcheckInterval = 15
