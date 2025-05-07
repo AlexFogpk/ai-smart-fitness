@@ -3,7 +3,7 @@ builder = "nixpacks"
 
 nixpacksPlan = """
 [phases.setup]
-nixPkgs = ["...", "python310"]
+nixPkgs = ["python311"]
 
 [phases.install]
 cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
