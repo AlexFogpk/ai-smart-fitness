@@ -12,6 +12,7 @@ import {
   MacroBar,
 } from "./components/MobileExtra";
 import './theme.css';
+import Header from "./Header";
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
