@@ -76,6 +76,7 @@ async def telegram_webhook_endpoint(request: Request):
 
 # --- Application Setup and Lifespan Events ---
 async def lifespan_startup():
+    print("[DEBUG] Entered lifespan_startup", file=sys.stderr)
     print("Starting up and setting webhook...", file=sys.stderr)
     if not TELEGRAM_TOKEN:
         print("TELEGRAM_TOKEN is not set!", file=sys.stderr)
@@ -155,6 +156,10 @@ async def lifespan_startup():
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         print(f"[STARTUP] Exception type: {exc_type}, File: {fname}, Line: {exc_tb.tb_lineno}", file=sys.stderr)
 
+    # Для FastAPI 0.93.0+ (предпочтительно). Если вызовет AttributeError, верните app.router.lifespan_context = lifespan для более старых версий.
+    app.lifespan = lifespan
+    app.router.lifespan_context = lifespan
+
 async def lifespan_shutdown():
     print("Shutting down...", file=sys.stderr)
     if hasattr(app.state, 'ptb_application') and app.state.ptb_application:
@@ -191,6 +196,7 @@ async def lifespan(app_instance: FastAPI):
 
 # Для FastAPI 0.93.0+ (предпочтительно). Если вызовет AttributeError, верните app.router.lifespan_context = lifespan для более старых версий.
 app.lifespan = lifespan # MODIFIED
+app.router.lifespan_context = lifespan
 
 
 if __name__ == "__main__":
