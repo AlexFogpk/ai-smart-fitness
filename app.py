@@ -49,6 +49,7 @@ async def root():
 
 @app.post("/telegram-webhook")
 async def telegram_webhook_endpoint(request: Request):
+    print("[WEBHOOK] Received a request on /telegram-webhook endpoint.", file=sys.stderr)
     try:
         data = await request.json()
         # print("Получен запрос от Telegram:", data, file=sys.stderr) # Uncomment for debugging
