@@ -86,6 +86,8 @@ async def lifespan_startup():
     # Add a handler for non-text messages if you want specific behavior
     ptb_application.add_handler(MessageHandler(filters.ALL & ~filters.TEXT & ~filters.COMMAND, handle_message))
 
+    await ptb_application.initialize()
+
     app.state.ptb_application = ptb_application
 
     try:
@@ -114,6 +116,14 @@ async def lifespan_shutdown():
         except Exception as e:
             print(f"Failed to delete webhook: {e}", file=sys.stderr)
         
+        ptb_app = app.state.ptb_application 
+        print("Attempting to shutdown PTB application...", file=sys.stderr)
+        try:
+            await ptb_app.shutdown()
+            print("PTB application shutdown complete.", file=sys.stderr)
+        except Exception as e:
+            print(f"Failed to shutdown PTB application: {e}", file=sys.stderr)
+
         # For python-telegram-bot v20+, Application object doesn't have a simple .shutdown()
         # It relies on asyncio task cancellation if you were running it with .run_polling() or .run_webhook()
         # Since we manage the FastAPI lifecycle, this explicit PTB app shutdown is less critical here.
@@ -130,7 +140,8 @@ async def lifespan(app_instance: FastAPI):
     yield
     await lifespan_shutdown()
 
-app.router.lifespan_context = lifespan
+# Для FastAPI 0.93.0+ (предпочтительно). Если вызовет AttributeError, верните app.router.lifespan_context = lifespan для более старых версий.
+app.lifespan = lifespan # MODIFIED
 
 
 if __name__ == "__main__":
