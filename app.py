@@ -96,20 +96,28 @@ async def lifespan_startup():
     app.state.ptb_application = ptb_application
 
     try:
-        # Check if webhook is already set to avoid errors, or drop pending updates
-        # current_webhook_info = await ptb_application.bot.get_webhook_info()
-        # if current_webhook_info.url != WEBHOOK_URL:
+        print(f"[STARTUP] Attempting to set webhook to: {WEBHOOK_URL}", file=sys.stderr)
         await ptb_application.bot.set_webhook(
             url=WEBHOOK_URL,
             allowed_updates=Update.ALL_TYPES,
             drop_pending_updates=True # Good for ensuring a clean state on startup
         )
-        print(f"Webhook set to {WEBHOOK_URL}", file=sys.stderr)
-        # else:
-        #     print(f"Webhook already set to {WEBHOOK_URL}", file=sys.stderr)
+        # Verify webhook setting
+        new_webhook_info = await ptb_application.bot.get_webhook_info()
+        if new_webhook_info and new_webhook_info.url == WEBHOOK_URL:
+            print(f"[STARTUP] Webhook successfully SET AND VERIFIED: {new_webhook_info.url}", file=sys.stderr)
+        else:
+            current_url = new_webhook_info.url if new_webhook_info else "COULD NOT GET CURRENT WEBHOOK INFO"
+            print(f"[STARTUP] FAILED TO SET/VERIFY WEBHOOK.", file=sys.stderr)
+            print(f"[STARTUP] Expected URL: {WEBHOOK_URL}", file=sys.stderr)
+            print(f"[STARTUP] Actual URL after set_webhook: {current_url}", file=sys.stderr)
+            if new_webhook_info and new_webhook_info.last_error_date:
+                 print(f"[STARTUP] Last error date: {new_webhook_info.last_error_date}", file=sys.stderr)
+                 print(f"[STARTUP] Last error message: {new_webhook_info.last_error_message}", file=sys.stderr)
 
     except Exception as e:
-        print(f"Failed to set webhook: {e}", file=sys.stderr)
+        print(f"[STARTUP] CRITICAL ERROR during set_webhook operation: {e}", file=sys.stderr)
+        # Consider re-raising or logging more details if needed
 
 async def lifespan_shutdown():
     print("Shutting down...", file=sys.stderr)
