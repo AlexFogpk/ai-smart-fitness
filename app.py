@@ -60,7 +60,11 @@ async def telegram_webhook_endpoint(request: Request):
         ptb_app = app.state.ptb_application
         
         update = Update.de_json(data, ptb_app.bot)
+        print(f"[WEBHOOK] Update object created: {update.to_dict()}", file=sys.stderr)
+        
         await ptb_app.process_update(update)
+        print("[WEBHOOK] ptb_app.process_update call completed.", file=sys.stderr)
+        
         return {"status": "ok"}
     except Exception as e:
         print(f"Ошибка в вебхуке: {e}", file=sys.stderr)
