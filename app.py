@@ -95,29 +95,65 @@ async def lifespan_startup():
 
     app.state.ptb_application = ptb_application
 
+    # More robust webhook setup
     try:
-        print(f"[STARTUP] Attempting to set webhook to: {WEBHOOK_URL}", file=sys.stderr)
-        await ptb_application.bot.set_webhook(
+        bot = ptb_application.bot
+        # 1. Get current webhook info (before any changes)
+        print("[STARTUP] Getting initial webhook info...", file=sys.stderr)
+        initial_webhook_info = await bot.get_webhook_info()
+        if initial_webhook_info and initial_webhook_info.url:
+            print(f"[STARTUP] Initial webhook URL: {initial_webhook_info.url}", file=sys.stderr)
+            if initial_webhook_info.last_error_date:
+                 print(f"[STARTUP] Initial last_error_date: {initial_webhook_info.last_error_date}", file=sys.stderr)
+                 print(f"[STARTUP] Initial last_error_message: {initial_webhook_info.last_error_message}", file=sys.stderr)
+        else:
+            print("[STARTUP] No initial webhook info found or no URL set.", file=sys.stderr)
+
+        # 2. Delete existing webhook
+        print("[STARTUP] Attempting to delete any existing webhook...", file=sys.stderr)
+        delete_result = await bot.delete_webhook(drop_pending_updates=True)
+        print(f"[STARTUP] Webhook delete_webhook result: {delete_result}", file=sys.stderr)
+        # Short pause after delete, just in case
+        await asyncio.sleep(1)
+
+
+        # 3. Set new webhook
+        print(f"[STARTUP] Attempting to set new webhook to: {WEBHOOK_URL}", file=sys.stderr)
+        set_result = await bot.set_webhook(
             url=WEBHOOK_URL,
             allowed_updates=Update.ALL_TYPES,
-            drop_pending_updates=True # Good for ensuring a clean state on startup
+            drop_pending_updates=True
         )
-        # Verify webhook setting
-        new_webhook_info = await ptb_application.bot.get_webhook_info()
-        if new_webhook_info and new_webhook_info.url == WEBHOOK_URL:
-            print(f"[STARTUP] Webhook successfully SET AND VERIFIED: {new_webhook_info.url}", file=sys.stderr)
+        print(f"[STARTUP] Webhook set_webhook result: {set_result}", file=sys.stderr)
+        
+        # 4. Get and verify new webhook info
+        print("[STARTUP] Getting new webhook info after setting...", file=sys.stderr)
+        final_webhook_info = await bot.get_webhook_info()
+        if final_webhook_info and final_webhook_info.url:
+            print(f"[STARTUP] Final webhook URL from Telegram: {final_webhook_info.url}", file=sys.stderr)
+            print(f"[STARTUP] Expected webhook URL: {WEBHOOK_URL}", file=sys.stderr)
+            if final_webhook_info.url == WEBHOOK_URL:
+                print("[STARTUP] SUCCESS: Webhook URL matches expected URL!", file=sys.stderr)
+            else:
+                print("[STARTUP] ERROR: Webhook URL MISMATCH!", file=sys.stderr)
+            
+            if final_webhook_info.has_custom_certificate:
+                 print(f"[STARTUP] Has custom certificate: {final_webhook_info.has_custom_certificate}", file=sys.stderr)
+            if final_webhook_info.pending_update_count:
+                 print(f"[STARTUP] Pending update count: {final_webhook_info.pending_update_count}", file=sys.stderr)
+            if final_webhook_info.last_error_date:
+                 print(f"[STARTUP] Last error date: {final_webhook_info.last_error_date}", file=sys.stderr)
+                 print(f"[STARTUP] Last error message: {final_webhook_info.last_error_message}", file=sys.stderr)
+            if final_webhook_info.allowed_updates:
+                print(f"[STARTUP] Allowed updates: {final_webhook_info.allowed_updates}", file=sys.stderr)
         else:
-            current_url = new_webhook_info.url if new_webhook_info else "COULD NOT GET CURRENT WEBHOOK INFO"
-            print(f"[STARTUP] FAILED TO SET/VERIFY WEBHOOK.", file=sys.stderr)
-            print(f"[STARTUP] Expected URL: {WEBHOOK_URL}", file=sys.stderr)
-            print(f"[STARTUP] Actual URL after set_webhook: {current_url}", file=sys.stderr)
-            if new_webhook_info and new_webhook_info.last_error_date:
-                 print(f"[STARTUP] Last error date: {new_webhook_info.last_error_date}", file=sys.stderr)
-                 print(f"[STARTUP] Last error message: {new_webhook_info.last_error_message}", file=sys.stderr)
+            print("[STARTUP] ERROR: Could not get final webhook info or no URL set after attempt.", file=sys.stderr)
 
     except Exception as e:
-        print(f"[STARTUP] CRITICAL ERROR during set_webhook operation: {e}", file=sys.stderr)
-        # Consider re-raising or logging more details if needed
+        print(f"[STARTUP] CRITICAL ERROR during robust webhook setup: {e}", file=sys.stderr)
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(f"[STARTUP] Exception type: {exc_type}, File: {fname}, Line: {exc_tb.tb_lineno}", file=sys.stderr)
 
 async def lifespan_shutdown():
     print("Shutting down...", file=sys.stderr)
