@@ -247,15 +247,15 @@ function App() {
 // --- ГЛАВНАЯ СТРАНИЦА ---
 function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#fafbfc', display: 'flex', flexDirection: 'column' }}>
-      {/* Top App Bar */}
+    <Box sx={{ minHeight: '100vh', bgcolor: '#fafbfc', display: 'flex', flexDirection: 'column', pb: 9 }}>
+      {/* Top App Bar (оставляем только один!) */}
       <Box sx={{
         width: '100%',
-        height: 64,
+        height: 56,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        px: 2.2,
+        px: 2,
         boxShadow: 1,
         bgcolor: 'background.paper',
         borderBottom: '1px solid',
@@ -264,22 +264,22 @@ function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
         top: 0,
         zIndex: 10,
       }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: 16 }}>
-          {getDayString()}  
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: 15 }}>
+          {getDayString()}
         </Typography>
-        <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main', letterSpacing: '.01em', fontSize: 20 }}>
+        <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main', letterSpacing: '.01em', fontSize: 19 }}>
           SmartFitness AI
         </Typography>
-        <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'grey.100', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="https://mui.com/static/images/avatar/1.jpg" alt="profile" style={{ width: 28, height: 28, borderRadius: '50%' }} />
+        <Box sx={{ width: 34, height: 34, borderRadius: '50%', bgcolor: 'grey.100', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src="https://mui.com/static/images/avatar/1.jpg" alt="profile" style={{ width: 26, height: 26, borderRadius: '50%' }} />
         </Box>
       </Box>
       {/* Main Content */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 4, pb: 2 }}>
         {/* Calories Circular Progress */}
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 4, position: 'relative', width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <CaloriesRing value={summary.calories} max={kbju.calories} />
-          <Box sx={{ position: 'absolute', top: 90, left: '50%', transform: 'translateX(-50%)', textAlign: 'center', width: 160 }}>
+          <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
             <Typography variant="h3" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1, fontSize: 38 }}>
               {summary.calories}
             </Typography>
@@ -329,18 +329,19 @@ function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
           variant="contained"
           color="primary"
           size="large"
-          sx={{ fontWeight: 800, borderRadius: 3, px: 3, boxShadow: 2, fontSize: 17 }}
+          sx={{ fontWeight: 800, borderRadius: 3, px: 3, boxShadow: 2, fontSize: 17, minWidth: 160 }}
           onClick={onGoToCalc}
+          startIcon={<span style={{fontSize:22,marginRight:4}}>+</span>}
         >
-          Добавить еду +
+          Добавить еду
         </Button>
         <Button
           variant="outlined"
           color="primary"
           size="large"
-          sx={{ fontWeight: 800, borderRadius: 3, px: 3, fontSize: 17, borderWidth: 2 }}
+          sx={{ fontWeight: 800, borderRadius: 3, px: 3, fontSize: 17, borderWidth: 2, minWidth: 160 }}
           onClick={onGoToChat}
-          startIcon={<span role="img" aria-label="ai">🧠</span>}
+          startIcon={<span role="img" aria-label="ai" style={{fontSize:22,marginRight:4}}>🧠</span>}
         >
           ИИ Тренер
         </Button>
