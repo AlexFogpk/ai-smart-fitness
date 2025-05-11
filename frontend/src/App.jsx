@@ -28,6 +28,10 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Avatar from '@mui/material/Avatar';
 import MenuIcon from '@mui/icons-material/Menu';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { ru } from 'date-fns/locale';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -94,7 +98,7 @@ function App() {
     }
   }, [stage]);
 
-  // --- ВАЖНО: удалено всё, что связано с welcome, typed и приветствием ---
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const kbju = getKBJU(profile);
   const [mealsByType, setMealsByType] = useState(initialMealsByType);
@@ -187,6 +191,8 @@ function App() {
             allMeals={allMeals}
             onGoToChat={() => setTab("chat")}
             onGoToCalc={() => setTab("calc")}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
           />
         )}
         {tab === "calc" && (
@@ -249,7 +255,7 @@ function App() {
 }
 
 // --- ГЛАВНАЯ СТРАНИЦА ---
-function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
+function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc, selectedDate, setSelectedDate }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -258,13 +264,26 @@ function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
       {/* Top App Bar */}
       <AppBar position="sticky" color="inherit" elevation={1} sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Toolbar sx={{ minHeight: 56, px: 2 }}>
-          <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700, color: 'text.secondary', fontSize: 15 }}>
-            {getDayString()}
-          </Typography>
-          <Typography variant="h6" sx={{ flex: 2, fontWeight: 800, color: 'primary.main', letterSpacing: '.01em', fontSize: 19, textAlign: 'center' }}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+            <DatePicker
+              value={selectedDate}
+              onChange={setSelectedDate}
+              format="MM/dd"
+              slotProps={{
+                textField: {
+                  variant: 'standard',
+                  sx: { minWidth: 90, mr: 2, fontWeight: 700, fontSize: 16 },
+                  InputProps: { disableUnderline: true },
+                },
+                openPickerButton: {
+                  sx: { color: 'primary.main' }
+                }
+              }}
+            />
+          </LocalizationProvider>
+          <Typography variant="h6" sx={{ flex: 1, fontWeight: 800, color: 'primary.main', letterSpacing: '.01em', fontSize: 19, textAlign: 'center' }}>
             SmartFitness AI
           </Typography>
-          <Avatar src="https://mui.com/static/images/avatar/1.jpg" sx={{ width: 34, height: 34, ml: 2 }} />
           <IconButton color="primary" onClick={handleMenuOpen} sx={{ ml: 1 }}>
             <MenuIcon />
           </IconButton>
