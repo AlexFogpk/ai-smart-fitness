@@ -6,7 +6,6 @@ import App from './App.jsx'
 // MUI Theme Imports
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import 'material-symbols/rounded.css';
 
 // Create a default theme instance.
 const theme = createTheme({
