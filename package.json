@@ -1,7 +1,5 @@
 {
   "dependencies": {
-    "@date-io/date-fns": "^3.2.1",
-    "@mui/x-date-pickers": "^8.3.0",
-    "date-fns": "^4.1.0"
+    "material-symbols": "^0.31.2"
   }
 }

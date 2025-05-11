@@ -4,106 +4,188 @@ import './index.css'
 import App from './App.jsx'
 
 // MUI Theme Imports
-import { ThemeProvider, createTheme, alpha } from '@mui/material/styles';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import 'material-symbols/rounded.css';
 
 // Create a default theme instance.
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#229ED9', // from --color-primary
-      light: alpha('#229ED9', 0.85), // Lighter primary for hover/selected states
+      main: '#4285F4', // Material 3 blue
+      light: '#B6DAFF',
+      dark: '#174EA6',
       contrastText: '#fff',
     },
     secondary: {
-      main: '#1ba05e', // from --color-accent
-      light: alpha('#1ba05e', 0.2),
-      dark: alpha('#1ba05e', 0.7),
+      main: '#34A853', // Material 3 green
+      light: '#B7F7D8',
+      dark: '#0B8043',
       contrastText: '#fff',
     },
     background: {
-      default: '#f6fbff', // from --color-bg
-      paper: '#FFFFFF', // from --color-card
+      default: '#F8FAFB', // Material 3 background
+      paper: '#FFFFFF',
+    },
+    surfaceVariant: {
+      main: '#F2F7FB',
+    },
+    error: {
+      main: '#EA4335',
+    },
+    warning: {
+      main: '#FBBC05',
+    },
+    info: {
+      main: '#4285F4',
+    },
+    success: {
+      main: '#34A853',
     },
     text: {
-      primary: '#1d3557', // from original body color
-      secondary: alpha('#1d3557', 0.7),
+      primary: '#1A1C1E',
+      secondary: '#44474F',
+      disabled: '#A1A1A1',
     },
-    divider: '#e9f4fc', // from --color-border
+    divider: '#E0E3E7',
     action: {
-      hover: '#e7f6ff', // from --color-bg-soft
-      // active: alpha('#229ED9', 0.1),
+      hover: '#E8F0FE',
+      selected: '#E3F2FD',
+      disabled: '#F1F1F1',
+      disabledBackground: '#F1F1F1',
     },
-    // Add custom colors if needed, e.g. for MacroBar
-    // customColors: {
-    //   carbs: '#3bafe8',
-    //   protein: '#5fc77f',
-    //   fat: '#ffb24a',
-    // }
   },
   typography: {
-    fontFamily: 'system-ui, Arial, sans-serif', // from --font-main
-    h1: { fontWeight: 800, fontSize: '2.8rem' },
-    h2: { fontWeight: 800, fontSize: '2.4rem' },
-    h3: { fontWeight: 700, fontSize: '2.0rem' },
-    h4: { fontWeight: 700, fontSize: '1.8rem' },
-    h5: { fontWeight: 700, fontSize: '1.5rem' }, // Used for page/card titles
-    h6: { fontWeight: 700, fontSize: '1.25rem' }, // Used for SideMenu profile name
-    subtitle1: { fontWeight: 600, fontSize: '1.1rem' },
-    subtitle2: { fontWeight: 600, fontSize: '0.95rem' }, // Used for MacroBar labels
-    body1: { fontSize: '1rem' },
-    body2: { fontSize: '0.875rem' },
-    button: { textTransform: 'none', fontWeight: 700 }, // Default button style
+    fontFamily: 'Roboto, system-ui, Arial, sans-serif',
+    h1: { fontWeight: 700, fontSize: '2.8rem', letterSpacing: '-.02em' },
+    h2: { fontWeight: 700, fontSize: '2.2rem', letterSpacing: '-.01em' },
+    h3: { fontWeight: 700, fontSize: '1.8rem' },
+    h4: { fontWeight: 700, fontSize: '1.5rem' },
+    h5: { fontWeight: 700, fontSize: '1.25rem' },
+    h6: { fontWeight: 700, fontSize: '1.1rem' },
+    subtitle1: { fontWeight: 500, fontSize: '1rem' },
+    subtitle2: { fontWeight: 500, fontSize: '0.95rem' },
+    body1: { fontSize: '1rem', fontWeight: 400 },
+    body2: { fontSize: '0.92rem', fontWeight: 400 },
+    button: { textTransform: 'none', fontWeight: 600, letterSpacing: '.01em', borderRadius: 12 },
     caption: { fontSize: '0.8rem' },
     overline: { fontSize: '0.75rem', letterSpacing: '0.05em'}
   },
   shape: {
-    borderRadius: 18, // from --radius-main
+    borderRadius: 18, // Material 3 large radius
   },
+  shadows: [
+    'none',
+    '0px 1.5px 4px 0px rgba(60,64,67,0.08)',
+    '0px 2px 8px 0px rgba(60,64,67,0.12)',
+    ...Array(22).fill('0px 2px 8px 0px rgba(60,64,67,0.10)')
+  ],
   components: {
     MuiCard: {
       defaultProps: {
-        elevation: 3, // Default shadow for cards
+        elevation: 2,
       },
       styleOverrides: {
         root: {
-          // borderRadius: 22, // from --radius-card, if different from global shape.borderRadius
+          borderRadius: 20,
+          boxShadow: '0px 2px 8px 0px rgba(60,64,67,0.10)',
+          background: '#fff',
         }
       }
     },
     MuiButton: {
       defaultProps: {
-        // disableElevation: true, // If a flatter button style is preferred globally
+        disableElevation: true,
       },
       styleOverrides: {
         root: {
-           borderRadius: 12, // Consistent button border radius
-          // transition: 'background .2s cubic-bezier(.55,.08,.39,.98), color .2s cubic-bezier(.55,.08,.39,.98)', // from --transition-main
+          borderRadius: 16,
+          fontWeight: 600,
+          fontSize: 17,
+          padding: '10px 22px',
+          boxShadow: 'none',
+          letterSpacing: '.01em',
+        },
+        contained: {
+          background: 'linear-gradient(90deg, #4285F4 60%, #34A853 100%)',
+          color: '#fff',
+          '&:hover': {
+            background: 'linear-gradient(90deg, #174EA6 60%, #0B8043 100%)',
+          },
+        },
+        outlined: {
+          borderWidth: 2,
+          borderColor: '#E0E3E7',
+          color: '#4285F4',
+          background: '#fff',
+          '&:hover': {
+            borderColor: '#4285F4',
+            background: '#F2F7FB',
+          },
+        },
+      }
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          background: '#fff',
+          color: '#1A1C1E',
+          boxShadow: '0px 1.5px 4px 0px rgba(60,64,67,0.08)',
         }
       }
     },
-    MuiToggleButton: {
-        styleOverrides: {
-            root: {
-                borderRadius: 8, // Slightly less than buttons for visual distinction in groups
-                textTransform: 'none',
-                fontWeight: 600,
-            }
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          borderTopLeftRadius: 22,
+          borderBottomLeftRadius: 22,
+          background: '#fff',
+          boxShadow: '-4px 0 28px #d3eafc33',
         }
+      }
+    },
+    MuiCardContent: {
+      styleOverrides: {
+        root: {
+          padding: '24px 20px',
+        }
+      }
     },
     MuiTextField: {
-        defaultProps: {
-            variant: 'outlined',
-            size: 'small',
-            fullWidth: true,
+      defaultProps: {
+        variant: 'outlined',
+        size: 'small',
+        fullWidth: true,
+      },
+      styleOverrides: {
+        root: {
+          borderRadius: 14,
         }
+      }
     },
-    MuiSelect: {
-        defaultProps: {
-            variant: 'outlined',
-            size: 'small',
-            fullWidth: true,
+    MuiLinearProgress: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          height: 8,
         }
+      }
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          marginBottom: 4,
+          transition: 'background 0.2s',
+        }
+      }
+    },
+    MuiAvatar: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+        }
+      }
     }
   }
 });
