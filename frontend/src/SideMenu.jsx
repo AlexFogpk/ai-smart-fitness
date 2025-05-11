@@ -11,6 +11,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 import Box from '@mui/material/Box';
 import Typography from "@mui/material/Typography";
+import Avatar from '@mui/material/Avatar';
 
 const drawerWidth = 290;
 
@@ -35,14 +36,12 @@ export default function SideMenu({ open, onClose, current, onSelect, profile = {
       role="presentation"
     >
       {/* Профиль */}
-      <ListItem sx={{ pt: 3, pb: 2, mb: 1, backgroundColor: 'action.hover' }}>
-        <ListItemIcon sx={{ minWidth: 0, mr: 2, color: 'primary.main' }}>
-          <FaUserCircle size={46} />
-        </ListItemIcon>
-        <ListItemText 
-          primary={<Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>{profile.name || "Гость"}</Typography>}
-        />
-      </ListItem>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pt: 3, pb: 2, mb: 1, bgcolor: 'action.hover', px: 2 }}>
+        <Avatar sx={{ width: 46, height: 46, bgcolor: 'primary.main' }}>
+          <FaUserCircle size={32} />
+        </Avatar>
+        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>{profile.name || "Гость"}</Typography>
+      </Box>
       
       {/* Навигация */}
       <List sx={{ flexGrow: 1, px:1 }}>
@@ -52,7 +51,7 @@ export default function SideMenu({ open, onClose, current, onSelect, profile = {
             selected={current === item.id}
             onClick={() => { onSelect(item.id); onClose(); }}
             sx={theme => ({
-              borderRadius: '12px', // Adjusted border radius
+              borderRadius: 2,
               mb: 0.5,
               ...(item.accent && {
                 backgroundColor: theme.palette.secondary.light,
@@ -112,7 +111,7 @@ export default function SideMenu({ open, onClose, current, onSelect, profile = {
           boxSizing: 'border-box',
           borderTopLeftRadius: 22, // from SideMenu.css
           borderBottomLeftRadius: 22, // from SideMenu.css
-          backgroundColor: 'rgba(255,255,255,0.97)', // from SideMenu.css
+          backgroundColor: 'background.paper', // from SideMenu.css
           backdropFilter: 'blur(8px)', // from SideMenu.css
           boxShadow: '-4px 0 28px #d3eafc33', // from SideMenu.css
         },

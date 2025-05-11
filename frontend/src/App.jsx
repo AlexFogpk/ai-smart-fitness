@@ -24,6 +24,10 @@ import { styled } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import LinearProgress from '@mui/material/LinearProgress';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Avatar from '@mui/material/Avatar';
+import MenuIcon from '@mui/icons-material/Menu';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -246,39 +250,44 @@ function App() {
 
 // --- ГЛАВНАЯ СТРАНИЦА ---
 function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#fafbfc', display: 'flex', flexDirection: 'column', pb: 9 }}>
-      {/* Top App Bar (оставляем только один!) */}
-      <Box sx={{
-        width: '100%',
-        height: 56,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        px: 2,
-        boxShadow: 1,
-        bgcolor: 'background.paper',
-        borderBottom: '1px solid',
-        borderColor: 'grey.100',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-      }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: 15 }}>
-          {getDayString()}
-        </Typography>
-        <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main', letterSpacing: '.01em', fontSize: 19 }}>
-          SmartFitness AI
-        </Typography>
-        <Box sx={{ width: 34, height: 34, borderRadius: '50%', bgcolor: 'grey.100', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="https://mui.com/static/images/avatar/1.jpg" alt="profile" style={{ width: 26, height: 26, borderRadius: '50%' }} />
-        </Box>
-      </Box>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column', pb: 9 }}>
+      {/* Top App Bar */}
+      <AppBar position="sticky" color="inherit" elevation={1} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Toolbar sx={{ minHeight: 56, px: 2 }}>
+          <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700, color: 'text.secondary', fontSize: 15 }}>
+            {getDayString()}
+          </Typography>
+          <Typography variant="h6" sx={{ flex: 2, fontWeight: 800, color: 'primary.main', letterSpacing: '.01em', fontSize: 19, textAlign: 'center' }}>
+            SmartFitness AI
+          </Typography>
+          <Avatar src="https://mui.com/static/images/avatar/1.jpg" sx={{ width: 34, height: 34, ml: 2 }} />
+          <IconButton color="primary" onClick={handleMenuOpen} sx={{ ml: 1 }}>
+            <MenuIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
       {/* Main Content */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 4, pb: 2 }}>
         {/* Calories Circular Progress */}
         <Box sx={{ mb: 4, position: 'relative', width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <CaloriesRing value={summary.calories} max={kbju.calories} />
+          <CircularProgress
+            variant="determinate"
+            value={100}
+            size={160}
+            thickness={5.5}
+            sx={{ color: 'grey.200', position: 'absolute', left: 0, top: 0 }}
+          />
+          <CircularProgress
+            variant="determinate"
+            value={Math.min(100, (summary.calories / kbju.calories) * 100 || 0)}
+            size={160}
+            thickness={5.5}
+            sx={{ color: 'primary.main', position: 'absolute', left: 0, top: 0 }}
+          />
           <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
             <Typography variant="h3" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1, fontSize: 38 }}>
               {summary.calories}
@@ -291,20 +300,20 @@ function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
         {/* Macros */}
         <Box sx={{ width: '100%', maxWidth: 340, mb: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-            <Typography variant="body1" sx={{ fontWeight: 700, color: '#3bafe8' }}>Углеводы</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 700, color: 'primary.main' }}>Углеводы</Typography>
             <Typography variant="body2" sx={{ fontWeight: 700 }}>{summary.carb} / {kbju.carb} г</Typography>
           </Box>
-          <LinearProgress variant="determinate" value={Math.min(100, (summary.carb / kbju.carb) * 100)} sx={{ height: 8, borderRadius: 5, mb: 1, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: '#3bafe8' } }} />
+          <LinearProgress variant="determinate" value={Math.min(100, (summary.carb / kbju.carb) * 100)} sx={{ height: 8, borderRadius: 5, mb: 1, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: 'primary.main' } }} />
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-            <Typography variant="body1" sx={{ fontWeight: 700, color: '#5fc77f' }}>Белки</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 700, color: 'success.main' }}>Белки</Typography>
             <Typography variant="body2" sx={{ fontWeight: 700 }}>{summary.protein} / {kbju.protein} г</Typography>
           </Box>
-          <LinearProgress variant="determinate" value={Math.min(100, (summary.protein / kbju.protein) * 100)} sx={{ height: 8, borderRadius: 5, mb: 1, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: '#5fc77f' } }} />
+          <LinearProgress variant="determinate" value={Math.min(100, (summary.protein / kbju.protein) * 100)} sx={{ height: 8, borderRadius: 5, mb: 1, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: 'success.main' } }} />
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-            <Typography variant="body1" sx={{ fontWeight: 700, color: '#ffb24a' }}>Жиры</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 700, color: 'warning.main' }}>Жиры</Typography>
             <Typography variant="body2" sx={{ fontWeight: 700 }}>{summary.fat} / {kbju.fat} г</Typography>
           </Box>
-          <LinearProgress variant="determinate" value={Math.min(100, (summary.fat / kbju.fat) * 100)} sx={{ height: 8, borderRadius: 5, mb: 1, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: '#ffb24a' } }} />
+          <LinearProgress variant="determinate" value={Math.min(100, (summary.fat / kbju.fat) * 100)} sx={{ height: 8, borderRadius: 5, mb: 1, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: 'warning.main' } }} />
         </Box>
         <Box sx={{ flex: 1 }} />
       </Box>
