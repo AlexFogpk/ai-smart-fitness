@@ -23,6 +23,7 @@ import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
+import LinearProgress from '@mui/material/LinearProgress';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -246,110 +247,119 @@ function App() {
 // --- ГЛАВНАЯ СТРАНИЦА ---
 function HomeMobile({ kbju, summary, allMeals, onGoToChat, onGoToCalc }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 30 }}
-      transition={{ duration: 0.6 }}
-    >
-      <Container maxWidth="sm" sx={{ pt: 2, pb: 1, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', minHeight: 'calc(100vh - 72px)' }}>
-        <Card sx={{ width: '93%', borderRadius: '16px', boxShadow: 3 }}>
-          <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3, px: 2 }}>
-            <CaloriesRing value={summary.calories} max={kbju.calories} />
-            <Typography variant="h4" component="div" sx={{ fontWeight: 800, color: 'text.primary', mt: 1 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#fafbfc', display: 'flex', flexDirection: 'column' }}>
+      {/* Top App Bar */}
+      <Box sx={{
+        width: '100%',
+        height: 64,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        px: 2.2,
+        boxShadow: 1,
+        bgcolor: 'background.paper',
+        borderBottom: '1px solid',
+        borderColor: 'grey.100',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+      }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: 16 }}>
+          {getDayString()}  
+        </Typography>
+        <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main', letterSpacing: '.01em', fontSize: 20 }}>
+          SmartFitness AI
+        </Typography>
+        <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'grey.100', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src="https://mui.com/static/images/avatar/1.jpg" alt="profile" style={{ width: 28, height: 28, borderRadius: '50%' }} />
+        </Box>
+      </Box>
+      {/* Main Content */}
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 4, pb: 2 }}>
+        {/* Calories Circular Progress */}
+        <Box sx={{ mb: 3 }}>
+          <CaloriesRing value={summary.calories} max={kbju.calories} />
+          <Box sx={{ position: 'absolute', top: 90, left: '50%', transform: 'translateX(-50%)', textAlign: 'center', width: 160 }}>
+            <Typography variant="h3" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1, fontSize: 38 }}>
               {summary.calories}
             </Typography>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.secondary', mb: 1 }}>
-              <Typography component="span" sx={{ color: 'primary.main', fontWeight: 800 }}>
-                {kbju.calories}
-              </Typography> цель
+            <Typography variant="subtitle1" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: 18 }}>
+              из {kbju.calories} ккал
             </Typography>
-            <Box sx={{ width: '100%', px: 2, boxSizing: 'border-box' }}>
-              <MacroBar label="Углеводы" value={summary.carb} max={kbju.carb} color="#3bafe8" />
-              <MacroBar label="Белки" value={summary.protein} max={kbju.protein} color="#5fc77f" />
-              <MacroBar label="Жиры" value={summary.fat} max={kbju.fat} color="#ffb24a" />
-            </Box>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={onGoToChat}
-              sx={{
-                mt: 2.5,
-                fontWeight: 800,
-                fontSize: 17,
-                borderRadius: '12px',
-                width: '85%',
-                maxWidth: 260,
-                py: 1.5,
-                background: 'linear-gradient(135deg,#35c7a5 60%,#229ED9)', // Keep custom gradient for now
-                '&:hover': {
-                  background: 'linear-gradient(135deg,#2da98e 60%,#1e8ac8)', // Darken gradient on hover
-                }
-              }}
-            >
-              ИИ Тренер
-            </Button>
-          </CardContent>
-        </Card>
-        <Card sx={{ width: '93%', borderRadius: '16px', boxShadow: 3 }}>
-          <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2.5, px: 2 }}>
-            <Typography variant="h6" component="div" sx={{ fontWeight: 800, mb: 0.25 }}>Сегодня</Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: 14, mb: 1.25 }}>{getDayString()}</Typography>
-            <Button
-              variant="contained"
-              onClick={onGoToCalc}
-              sx={{
-                fontWeight: 800,
-                fontSize: 17,
-                borderRadius: '12px',
-                padding: '12px 0',
-                width: '100%',
-                mt: 1.25,
-                background: 'linear-gradient(135deg,#3bafe8 80%,#53ddc9)', // Keep custom gradient
-                 '&:hover': {
-                  background: 'linear-gradient(135deg,#329cd6 80%,#4ac4b8)', // Darken gradient on hover
-                }
-              }}
-            >
-              Добавить еду
-            </Button>
-          </CardContent>
-        </Card>
-        <Card sx={{ width: '93%', borderRadius: '16px', boxShadow: 3, minHeight: 80 }}>
-          <CardContent sx={{ py: 2, px: 2 }}>
-            <Typography variant="h6" component="div" sx={{ fontWeight: 800, fontSize: 16, mb: 0.5 }}>Последние блюда</Typography>
-            {allMeals.length === 0 ? (
-              <Box sx={{ color: 'text.secondary', fontSize: 15, mt: 1.5, textAlign: 'center' }}>
-                <span role="img" aria-label="plate" style={{ fontSize: 22 }}>🍽️</span>
-                <br />
-                <Typography variant="body2">Пока ничего не добавлено</Typography>
-              </Box>
-            ) : (
-              allMeals.slice(-3).reverse().map((m, i) => (
-                <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 15, mb: 0.25 }}>
-                  <Typography variant="body2">{m.emoji || "🍽️"} {m.name}</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 700 }}>{m.grams} г</Typography>
-                </Box>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </Container>
-    </motion.div>
+          </Box>
+        </Box>
+        {/* Macros */}
+        <Box sx={{ width: '100%', maxWidth: 340, mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography variant="body1" sx={{ fontWeight: 700, color: '#3bafe8' }}>Углеводы</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>{summary.carb} / {kbju.carb} г</Typography>
+          </Box>
+          <LinearProgress variant="determinate" value={Math.min(100, (summary.carb / kbju.carb) * 100)} sx={{ height: 8, borderRadius: 5, mb: 1, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: '#3bafe8' } }} />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography variant="body1" sx={{ fontWeight: 700, color: '#5fc77f' }}>Белки</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>{summary.protein} / {kbju.protein} г</Typography>
+          </Box>
+          <LinearProgress variant="determinate" value={Math.min(100, (summary.protein / kbju.protein) * 100)} sx={{ height: 8, borderRadius: 5, mb: 1, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: '#5fc77f' } }} />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography variant="body1" sx={{ fontWeight: 700, color: '#ffb24a' }}>Жиры</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>{summary.fat} / {kbju.fat} г</Typography>
+          </Box>
+          <LinearProgress variant="determinate" value={Math.min(100, (summary.fat / kbju.fat) * 100)} sx={{ height: 8, borderRadius: 5, mb: 1, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { bgcolor: '#ffb24a' } }} />
+        </Box>
+        <Box sx={{ flex: 1 }} />
+      </Box>
+      {/* Bottom Action Bar */}
+      <Box sx={{
+        width: '100%',
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        bgcolor: 'background.paper',
+        boxShadow: '0 -2px 12px 0 rgba(0,0,0,0.04), 0 -1px 0 0 #e0e0e0',
+        py: 1.5,
+        px: 2,
+        display: 'flex',
+        gap: 2,
+        justifyContent: 'center',
+        borderTopLeftRadius: 18,
+        borderTopRightRadius: 18,
+        zIndex: 20,
+      }}>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          sx={{ fontWeight: 800, borderRadius: 3, px: 3, boxShadow: 2, fontSize: 17 }}
+          onClick={onGoToCalc}
+        >
+          Добавить еду +
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          size="large"
+          sx={{ fontWeight: 800, borderRadius: 3, px: 3, fontSize: 17, borderWidth: 2 }}
+          onClick={onGoToChat}
+          startIcon={<span role="img" aria-label="ai">🧠</span>}
+        >
+          ИИ Тренер
+        </Button>
+      </Box>
+    </Box>
   );
 }
 
+// --- Кольцевой прогресс ---
 function CaloriesRing({ value, max }) {
   const pct = Math.min(100, (value / max) * 100 || 0);
-  const size = 108;
-
+  const size = 160;
   return (
-    <Box sx={{ position: 'relative', display: 'inline-flex', width: size, height: size, mb: 0.75 }}>
+    <Box sx={{ position: 'relative', display: 'inline-flex', width: size, height: size }}>
       <CircularProgress
         variant="determinate"
         value={100}
         size={size}
-        thickness={4}
+        thickness={5.5}
         sx={{
           color: (theme) => theme.palette.grey[200],
           position: 'absolute',
@@ -361,9 +371,9 @@ function CaloriesRing({ value, max }) {
         variant="determinate"
         value={pct}
         size={size}
-        thickness={4}
+        thickness={5.5}
         sx={{
-          color: 'primary.main', // Or your specific theme color e.g. "#229ED9"
+          color: 'primary.main',
           position: 'absolute',
           left: 0,
           top: 0,
@@ -385,7 +395,7 @@ function CaloriesRing({ value, max }) {
           justifyContent: 'center',
         }}
       >
-        <PiBowlFoodFill color="#229ED9" size={38} />
+        <PiBowlFoodFill color="#229ED9" size={44} />
       </Box>
     </Box>
   );
