@@ -31,9 +31,10 @@ import Toolbar from '@mui/material/Toolbar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { ru } from 'date-fns/locale';
+// import { ru } from 'date-fns/locale'; // Удаляем, так как DatePicker будет использовать системную локаль или fallback
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -151,40 +152,69 @@ function App() {
   // Общий AppBar для всех страниц
   const CommonAppBar = (
     <AppBar position="sticky" elevation={1} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
-      <Toolbar sx={{ minHeight: {xs: 56, sm: 60}, px: { xs: 1, sm: 2 } }}>
-        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
-          <DatePicker
-            value={selectedDate}
-            onChange={setSelectedDate}
-            format="MM/dd"
-            slots={{ 
-                openPickerIcon: () => <span className="material-symbols-rounded" style={{color: 'var(--mui-palette-primary-main)', marginRight: '4px', fontSize: '22px'}}>calendar_month</span>,
-            }}
-            slotProps={{
-              textField: {
-                variant: 'standard',
-                sx: { 
-                    width: {xs: 70, sm: 80}, 
-                    mr: { xs: 0.5, sm: 1 }, 
-                    ml: {xs: -0.5, sm: 0},
-                    '& .MuiInputBase-input': {
-                        fontWeight: 600, 
-                        fontSize: {xs: '0.95rem', sm: '1rem'}, 
-                        color: 'text.primary',
-                        py: '6px',
-                        textAlign: 'center'
+      <Toolbar sx={{ minHeight: {xs: 56, sm: 60}, px: { xs: 1, sm: 1.5 } }}>
+        <Box sx={{display: 'flex', alignItems: 'center', flexShrink: 0, mr: {xs: 0.5, sm:1}}}>
+            <IconButton 
+                aria-label="Open date picker" 
+                onClick={(e) => {
+                    // Ищем input DatePicker внутри родительского элемента IconButton
+                    const datePickerInput = e.currentTarget.parentElement?.querySelector('input[placeholder="MM/DD"]'); // Используем placeholder для поиска
+                    if (datePickerInput && typeof datePickerInput.click === 'function') {
+                        datePickerInput.click();
                     }
+                }}
+                color="primary"
+                sx={{p: {xs:0.5, sm:0.75}}}
+            >
+                <span className="material-symbols-rounded" style={{fontSize: {xs: '22px', sm: '24px'}}}>calendar_month</span>
+            </IconButton>
+            <LocalizationProvider dateAdapter={AdapterDateFns} /* adapterLocale={ru} - можно добавить если нужна строгая русская локаль */ >
+            <DatePicker
+                value={selectedDate}
+                onChange={setSelectedDate}
+                format="MM/dd"
+                slots={{textField: (params) => <TextField {...params} variant="standard" /> }}
+                slotProps={{
+                textField: {
+                    variant: 'standard',
+                    // Добавляем aria-label для более надежного поиска, если placeholder изменится
+                    inputProps: { 'aria-label': 'Choose date' }, 
+                    sx: { 
+                        width: {xs: 55, sm: 60}, 
+                        '& .MuiInputBase-input': {
+                            fontWeight: 600, 
+                            fontSize: {xs: '0.9rem', sm: '0.95rem'}, 
+                            color: 'text.primary',
+                            py: '6px',
+                            textAlign: 'left',
+                            letterSpacing: '0.5px'
+                        }
+                    },
+                    InputProps: { disableUnderline: true, sx: { '&:hover': { bgcolor: 'action.hover' }, borderRadius: 2, px:0 } },
                 },
-                InputProps: { disableUnderline: true, sx: { '&:hover': { bgcolor: 'action.hover' }, borderRadius: 2, px:0.5 } },
-              },
+                }}
+            />
+            </LocalizationProvider>
+        </Box>
+        <Typography 
+            variant="h6" 
+            sx={{ 
+                flexGrow: 1, // Чтобы занимал оставшееся пространство и центрировал текст
+                fontWeight: 700, 
+                color: 'text.primary', 
+                letterSpacing: '.01em', 
+                fontSize: { xs: '1rem', sm: '1.15rem' }, 
+                textAlign: 'center', 
+                mx: {xs: 0.5, sm: 1},
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
             }}
-          />
-        </LocalizationProvider>
-        <Typography variant="h6" sx={{ flex: 1, fontWeight: 700, color: 'text.primary', letterSpacing: '.01em', fontSize: { xs: '1.05rem', sm: '1.2rem' }, textAlign: 'center', mx: {xs: 0.5, sm: 1} }}>
+        >
           SmartFitness AI
         </Typography>
-        <IconButton color="primary" onClick={() => setSideMenuOpen(true)} sx={{ p: {xs: 0.75, sm: 1} }}>
-          <span className="material-symbols-rounded" style={{fontSize: '26px'}}>menu</span>
+        <IconButton color="primary" onClick={() => setSideMenuOpen(true)} sx={{ p: {xs: 0.75, sm: 1}, ml: {xs:0.5, sm:1}, flexShrink: 0 }}>
+          <span className="material-symbols-rounded" style={{fontSize: {xs: '24px', sm: '26px'}}}>menu</span>
         </IconButton>
       </Toolbar>
     </AppBar>
