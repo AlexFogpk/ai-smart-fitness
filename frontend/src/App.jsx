@@ -34,6 +34,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { ru } from 'date-fns/locale';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
+import { motion } from 'framer-motion';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -122,8 +123,8 @@ function App() {
   const [editName, setEditName] = useState(false);
   const [newName, setNewName] = useState(profile.name);
   const [calcType, setCalcType] = useState("breakfast");
-  const [calcMode, setCalcMode] = useState("manual");
-  const [aiLoading, setAiLoading] = useState(false);
+  // const [calcMode, setCalcMode] = useState("manual"); // Не используется
+  // const [aiLoading, setAiLoading] = useState(false); // Не используется
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
 
   const Hamburger = (
@@ -197,15 +198,15 @@ function App() {
         )}
         {tab === "calc" && (
           <CalculatorMobile
-            kbju={kbju}
-            mealsByType={mealsByType}
+            // kbju={kbju} // Закомментировано в MobileExtra.jsx
+            // mealsByType={mealsByType} // Закомментировано в MobileExtra.jsx, но сам mealsByType нужен в App
             setMealsByType={setMealsByType}
             calcType={calcType}
             setCalcType={setCalcType}
-            calcMode={calcMode}
-            setCalcMode={setCalcMode}
-            aiLoading={aiLoading}
-            setAiLoading={setAiLoading}
+            // calcMode={calcMode} // Закомментировано в MobileExtra.jsx
+            // setCalcMode={setCalcMode} // Закомментировано в MobileExtra.jsx
+            // aiLoading={aiLoading} // Закомментировано в MobileExtra.jsx
+            // setAiLoading={setAiLoading} // Закомментировано в MobileExtra.jsx
             onBack={() => setTab("home")}
           />
         )}
@@ -235,17 +236,56 @@ function App() {
           />
         )}
         {tab === "programs" && (
-          <Container maxWidth="xs" sx={{ pt: { xs: 2, sm: 3 }, pb: 2, mt: {xs: 7, sm: 8} /* Отступ под AppBar */ }}>
-            <Card sx={{ p: 2 }}>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Typography variant="h5" component="h2" sx={{ fontWeight: 700, color: "primary.main", mb: 2 }}>
-                  Программы тренировок
-                </Typography>
-                <Typography variant="body1" sx={{ color: "text.secondary" }}>
-                  Скоро здесь появятся ваши программы тренировок!
-                </Typography>
-              </CardContent>
-            </Card>
+          <Container 
+            component={motion.div}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            maxWidth="sm"
+            sx={{ 
+              pt: { xs: 2, sm: 3 }, 
+              pb: { xs: 2, sm: 3 }, 
+              mt: {xs: 7, sm: 8},
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center',
+              minHeight: 'calc(100vh - 56px)',
+              boxSizing: 'border-box'
+            }}
+          >
+            <Paper 
+                elevation={2}
+                sx={{
+                  width: '100%',
+                  maxWidth: 520,
+                  p: { xs: 3, sm: 4 },
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  gap: 2
+                }}
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: 64, color: 'var(--mui-palette-primary-main)' }}>
+                model_training
+              </span>
+              <Typography variant="h5" component="h2" sx={{ fontWeight: 700, color: "primary.main"}}>
+                Программы тренировок
+              </Typography>
+              <Typography variant="body1" sx={{ color: "text.secondary", maxWidth: 380 }}>
+                Этот раздел находится в разработке. Скоро здесь появятся персональные программы тренировок, составленные нашим ИИ тренером!
+              </Typography>
+              <Button 
+                variant="outlined" 
+                color="primary" 
+                onClick={() => setTab("home")} 
+                startIcon={<span className="material-symbols-rounded">arrow_back</span>}
+                sx={{mt: 2, borderRadius: '20px', px:3}}
+                >
+                Вернуться на главную
+              </Button>
+            </Paper>
           </Container>
         )}
       {/* </AnimatePresence> */}
