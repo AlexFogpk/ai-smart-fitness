@@ -1,10 +1,24 @@
 import os
 import sys
 import asyncio
+import platform
 from fastapi import FastAPI, Request, HTTPException
 from telegram import Update, WebAppInfo # KeyboardButton, ReplyKeyboardMarkup removed as direct dict is used for reply_markup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import uvicorn
+
+# Diagnostic info - print at startup
+print(f"Python version: {platform.python_version()}", file=sys.stderr)
+print(f"Python executable: {sys.executable}", file=sys.stderr)
+print(f"System PATH: {os.environ.get('PATH', '')}", file=sys.stderr)
+print(f"Current directory: {os.getcwd()}", file=sys.stderr)
+print(f"Installed modules:", file=sys.stderr)
+for module in ["fastapi", "uvicorn", "telegram"]:
+    try:
+        __import__(module)
+        print(f"  - {module}: OK", file=sys.stderr)
+    except ImportError as e:
+        print(f"  - {module}: MISSING - {e}", file=sys.stderr)
 
 # Configuration
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
