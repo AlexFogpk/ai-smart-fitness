@@ -1,5 +1,6 @@
 import React from "react";
 import { FaHome, FaAppleAlt, FaRobot, FaUtensils, FaCog, FaDumbbell, FaUserCircle, FaSignOutAlt, FaInfoCircle } from "react-icons/fa";
+import { ColorModeContext } from "./main";
 // import "./SideMenu.css"; // Will be removed or replaced by MUI styles
 
 import Drawer from '@mui/material/Drawer';
@@ -12,10 +13,15 @@ import Box from '@mui/material/Box';
 import Typography from "@mui/material/Typography";
 import Avatar from '@mui/material/Avatar';
 import Paper from '@mui/material/Paper';
+import Switch from '@mui/material/Switch';
+import { useTheme } from '@mui/material/styles';
 
 const drawerWidth = 290;
 
 export default function SideMenu({ open, onClose, current, onSelect, profile = { name: "Гость" } }) {
+  const theme = useTheme();
+  const colorMode = React.useContext(ColorModeContext);
+  
   const menuItems = [
     { id: "home", label: "Главная", icon: <FaHome /> },
     { id: "calc", label: "Калькулятор", icon: <FaAppleAlt /> },
@@ -91,7 +97,27 @@ export default function SideMenu({ open, onClose, current, onSelect, profile = {
       <Divider sx={{ my: 1 }} />
       {/* Нижний блок */}
       <Box sx={{ px: 2, pb: 2 }}>
-        <Paper elevation={1} sx={{ borderRadius: 3, bgcolor: 'grey.100', p: 1 }}>
+        <Paper elevation={1} sx={{ borderRadius: 3, bgcolor: theme.palette.mode === 'light' ? 'grey.100' : 'background.paper', p: 1 }}>
+          {/* Переключатель темы */}
+          <ListItemButton 
+            onClick={colorMode.toggleColorMode} 
+            sx={{ borderRadius: 2, mb: 0.5, display: 'flex', justifyContent: 'space-between' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ListItemIcon sx={{ color: 'text.secondary', minWidth: 36 }}>
+                <span className="material-symbols-rounded">
+                  {theme.palette.mode === 'dark' ? 'dark_mode' : 'light_mode'}
+                </span>
+              </ListItemIcon>
+              <ListItemText primary="Темная тема" />
+            </Box>
+            <Switch 
+              checked={theme.palette.mode === 'dark'} 
+              color="primary" 
+              size="small"
+              inputProps={{ 'aria-label': 'toggle dark mode' }}
+            />
+          </ListItemButton>
           <List>
             {bottomMenuItems.map((item) => (
               <ListItemButton key={item.id} onClick={item.onClick} sx={{ borderRadius: 2, mb: 0.5 }}>

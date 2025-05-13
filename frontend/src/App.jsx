@@ -1,37 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion"; // Убедимся, что motion используется или удалим позже
-// import { FaBars } from "react-icons/fa"; // Старый гамбургер, удаляем
+import { motion } from "framer-motion";
 import SideMenu from "./SideMenu";
 import LogoRobot from "./LoadingLogos";
-// import { PiBowlFoodFill } from "react-icons/pi"; // Заменено на Material Symbols
-import {
-  CalculatorMobile,
-  AIChatMobile,
-  SettingsMobile,
-  MealsMobile,
-  // MacroBar, // Заменено на кастомные карточки в HomeMobile
-} from "./components/MobileExtra";
-// import Header from "./Header"; // Не используется, AppBar внутри HomeMobile
+
+// Компоненты из новых отдельных файлов
+import CalculatorMobile from "./components/CalculatorMobile";
+import AIChatMobile from "./components/AIChatMobile";
+import SettingsMobile from "./components/SettingsMobile";
+import MealsMobile from "./components/MealsMobile";
 
 // MUI Imports
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-// import { styled } from '@mui/material/styles'; // Не используется
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import LinearProgress from '@mui/material/LinearProgress';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
-// import Avatar from '@mui/material/Avatar'; // Не используется в HomeMobile AppBar
-// import MenuIcon from '@mui/icons-material/Menu'; // Заменен на Material Symbol
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-// import { ru } from 'date-fns/locale'; // Удаляем, так как DatePicker будет использовать системную локаль или fallback
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
@@ -55,11 +46,7 @@ function getKBJU({ sex, weight, height, age, activity, goal }) {
     carb,
   };
 }
-// function getDayString(date = new Date()) { // Не используется в HomeMobile, DatePicker сам форматирует
-//   const days = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-//   const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
-//   return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
-// }
+
 const defaultProfile = {
   sex: "male",
   age: 25,
@@ -86,18 +73,13 @@ function App() {
 
   useEffect(() => {
     if (stage === "splash") {
-      setTimeout(() => setStage("app"), 1500); // Уменьшил время сплэш-скрина для тестирования
+      setTimeout(() => setStage("app"), 1500);
     }
   }, [stage]);
 
   const kbju = getKBJU(profile);
   const [mealsByType, setMealsByType] = useState(initialMealsByType);
-  // const allMeals = [ // Не используется в HomeMobile в новом дизайне
-  //   ...mealsByType.breakfast.map(m => ({ ...m, type: "breakfast" })),
-  //   ...mealsByType.lunch.map(m => ({ ...m, type: "lunch" })),
-  //   ...mealsByType.dinner.map(m => ({ ...m, type: "dinner" })),
-  //   ...mealsByType.snack.map(m => ({ ...m, type: "snack" })),
-  // ];
+  
   const summary = Object.values(mealsByType).flat().reduce(
     (acc, m) => ({
       calories: acc.calories + (m.calories || 0),
@@ -111,31 +93,26 @@ function App() {
   const [editName, setEditName] = useState(false);
   const [newName, setNewName] = useState(profile.name);
   const [calcType, setCalcType] = useState("breakfast");
-  // const [calcMode, setCalcMode] = useState("manual"); // Не используется
-  // const [aiLoading, setAiLoading] = useState(false); // Не используется
 
   if (stage === "splash") {
     return (
       <Box sx={{
         minHeight: "100vh", 
         width: "100vw", 
-        // Более спокойный фон в стиле Material 3
         background: (theme) => `linear-gradient(145deg, ${theme.palette.surfaceVariant.main} 0%, ${theme.palette.background.default} 100%)`,
         display: "flex", 
         flexDirection: "column", 
         alignItems: "center", 
         justifyContent: "center",
         p: 3,
-        overflow: 'hidden' // Предотвращаем любой скролл на сплеше
+        overflow: 'hidden'
       }}>
-        <motion.div // Анимация для контента
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
           style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}
         >
-          {/* Можно оставить LogoRobot или заменить на Material Symbol */}
-          {/* <span className="material-symbols-rounded" style={{ fontSize: 80, color: 'var(--mui-palette-primary-main)', marginBottom: '24px' }}>smart_toy</span> */}
           <LogoRobot /> 
           <Typography variant="h3" component="div" sx={{ color: "primary.main", fontWeight: 700, letterSpacing: ".01em", mt: 3, mb:1, textAlign: 'center' }}>
             SmartFitness AI
@@ -149,17 +126,17 @@ function App() {
     );
   }
 
-  const appBarHeight = { xs: 56, sm: 60 }; // Определяем высоту AppBar для использования в padding
+  const appBarHeight = { xs: 56, sm: 60 };
 
   const CommonAppBar = (
     <AppBar 
-      position="sticky" // Sticky позволяет AppBar оставаться в потоке, но прилипать при скролле
+      position="sticky"
       elevation={1} 
       sx={{ 
         bgcolor: 'background.paper', 
         borderBottom: 1, 
         borderColor: 'divider',
-        height: appBarHeight // Явно задаем высоту
+        height: appBarHeight
       }}
     >
       <Toolbar sx={{ minHeight: appBarHeight, px: { xs: 1, sm: 1.5 } }}>
@@ -182,6 +159,7 @@ function App() {
                 value={selectedDate}
                 onChange={setSelectedDate}
                 format="MM/dd"
+                enableAccessibleFieldDOMStructure={false}
                 slots={{textField: (params) => <TextField {...params} variant="standard" /> }}
                 slotProps={{
                 textField: {
@@ -238,16 +216,12 @@ function App() {
         onSelect={setTab}
         profile={profile}
       />
-      {/* Основной контейнер для контента страницы */}
       <Box 
-        component="main" // Семантически правильный тег для основного контента
+        component="main"
         sx={{
-          flexGrow: 1, // Занимает всё доступное пространство
-          overflowY: 'auto', // Включает скролл только для этой области
+          flexGrow: 1,
+          overflowY: 'auto',
           width: '100%',
-          // paddingTop: appBarHeight, // Если AppBar position="fixed". Для sticky не всегда нужен.
-          // Вместо paddingTop, AppBar (sticky) сам будет управлять потоком.
-          // Убедимся, что дочерние компоненты страниц (HomeMobile и т.д.) не имеют своего верхнего отступа, мешающего AppBar
         }}
       > 
         {tab === "home" && (
@@ -408,7 +382,7 @@ function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
       </Typography>
       <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ width: '100%', maxWidth: {xs: 380, sm: 420, md: 480} }}>
         {macroData.map((macro) => (
-          <Grid item xs={12} sm={4} key={macro.name}>
+          <Grid xs={12} sm={4} key={macro.name}>
             <Paper elevation={0} sx={{ p: {xs: 1.5, sm:2}, textAlign: 'center', borderRadius: 3, border: 1, borderColor: 'divider', bgcolor:'background.paper' }}>
               <span className="material-symbols-rounded" style={{ fontSize: {xs:26, sm:28}, color: macro.color, marginBottom: '8px' }}>{macro.icon}</span>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5, fontSize: {xs: '0.9rem', sm: '0.95rem'} }}>{macro.name}</Typography>
@@ -423,7 +397,7 @@ function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
         ))}
       </Grid>
 
-      {/* Bottom Action Bar */}
+      {/* Bottom Action Bar с подписями */}
       <Paper 
         elevation={3} 
         sx={{
@@ -447,26 +421,42 @@ function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
           variant="contained"
           color="primary"
           onClick={onGoToCalc}
-          startIcon={<span className="material-symbols-rounded">add</span>}
-          sx={{ flex: 1, py: {xs:1, sm:1.2}, fontSize: {xs: '0.85rem', sm: '0.9rem'}, borderRadius: '20px'}}
+          sx={{ 
+            flex: 1, 
+            py: {xs:1, sm:1.2}, 
+            fontSize: {xs: '0.85rem', sm: '0.9rem'}, 
+            borderRadius: '20px',
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 0.3
+          }}
         >
-          Добавить Еду
+          <span className="material-symbols-rounded" style={{fontSize: 22}}>add</span>
+          <span>Добавить Еду</span>
         </Button>
         <Button
           variant="outlined"
           color="secondary"
           onClick={onGoToChat}
-          startIcon={<span className="material-symbols-rounded">psychology</span>}
-          sx={{ flex: 1, py: {xs:1, sm:1.2}, fontSize: {xs: '0.85rem', sm: '0.9rem'}, borderRadius: '20px', borderWidth: 1.5}}
+          sx={{ 
+            flex: 1, 
+            py: {xs:1, sm:1.2}, 
+            fontSize: {xs: '0.85rem', sm: '0.9rem'}, 
+            borderRadius: '20px', 
+            borderWidth: 1.5,
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 0.3
+          }}
         >
-          ИИ Тренер
+          <span className="material-symbols-rounded" style={{fontSize: 22}}>psychology</span>
+          <span>ИИ Тренер</span>
         </Button>
       </Paper>
     </Box>
   );
 }
-
-// --- Кольцевой прогресс --- // Удален, так как логика встроена в HomeMobile
-// function CaloriesRing({ value, max }) { ... }
 
 export default App;
