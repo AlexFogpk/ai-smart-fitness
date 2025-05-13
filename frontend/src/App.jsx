@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import SideMenu from "./SideMenu";
 import LogoRobot from "./LoadingLogos";
 
@@ -26,6 +26,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
+import Chip from '@mui/material/Chip';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -63,6 +64,45 @@ const initialMealsByType = {
   snack: [],
 };
 
+// Анимированный круговой прогресс - полностью переписан
+const AnimatedCircularProgress = ({ value, color, size, thickness }) => {
+  // Определяем размеры и координаты
+  const halfSize = size / 2;
+  const radius = halfSize - thickness;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffsetValue = circumference * (1 - value / 100);
+  
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
+      {/* Фоновый серый круг */}
+      <circle 
+        stroke="#E0E0E0"
+        fill="transparent"
+        strokeWidth={thickness}
+        r={radius}
+        cx={halfSize}
+        cy={halfSize}
+      />
+      
+      {/* Цветной прогресс круг */}
+      <circle 
+        stroke={color}
+        fill="transparent"
+        strokeWidth={thickness}
+        strokeDasharray={circumference}
+        strokeDashoffset={strokeDashoffsetValue}
+        r={radius}
+        cx={halfSize}
+        cy={halfSize}
+        style={{
+          strokeLinecap: 'round',
+          transition: 'stroke-dashoffset 1s ease-in-out',
+        }}
+      />
+    </svg>
+  );
+};
+
 // ------ Главный компонент ------
 function App() {
   const [stage, setStage] = useState("splash");
@@ -70,6 +110,9 @@ function App() {
   const [profile, setProfile] = useState(defaultProfile);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
+
+  // функция для навигации, чтобы передать её в HomeMobile
+  const navigateToCalculator = () => setTab("calc");
 
   useEffect(() => {
     if (stage === "splash") {
@@ -141,43 +184,41 @@ function App() {
     >
       <Toolbar sx={{ minHeight: appBarHeight, px: { xs: 1, sm: 1.5 } }}>
         <Box sx={{display: 'flex', alignItems: 'center', flexShrink: 0, mr: {xs: 0.5, sm:1}}}>
-            <IconButton 
-                aria-label="Open date picker" 
-                onClick={(e) => {
-                    const datePickerInput = e.currentTarget.parentElement?.querySelector('input[placeholder="MM/DD"]');
-                    if (datePickerInput && typeof datePickerInput.click === 'function') {
-                        datePickerInput.click();
-                    }
-                }}
-                color="primary"
-                sx={{p: {xs:0.5, sm:0.75}}}
-            >
-                <span className="material-symbols-rounded" style={{fontSize: {xs: '22px', sm: '24px'}}}>calendar_month</span>
-            </IconButton>
             <LocalizationProvider dateAdapter={AdapterDateFns} >
             <DatePicker
                 value={selectedDate}
                 onChange={setSelectedDate}
                 format="MM/dd"
                 enableAccessibleFieldDOMStructure={false}
-                slots={{textField: (params) => <TextField {...params} variant="standard" /> }}
+                slots={{
+                    openPickerIcon: () => (
+                        <span className="material-symbols-rounded" style={{fontSize: 24, color: 'var(--mui-palette-primary-main)'}}>
+                            calendar_month
+                        </span>
+                    ),
+                }}
                 slotProps={{
-                textField: {
-                    variant: 'standard',
-                    inputProps: { 'aria-label': 'Choose date' }, 
-                    sx: { 
-                        width: {xs: 55, sm: 60}, 
-                        '& .MuiInputBase-input': {
-                            fontWeight: 600, 
-                            fontSize: {xs: '0.9rem', sm: '0.95rem'}, 
-                            color: 'text.primary',
-                            py: '6px',
-                            textAlign: 'left',
-                            letterSpacing: '0.5px'
+                    textField: {
+                        variant: 'standard',
+                        sx: {
+                            '& .MuiInputBase-root': {
+                                fontWeight: 600,
+                                fontSize: '0.95rem',
+                                color: 'text.primary',
+                                '&:hover': { bgcolor: 'action.hover' }, 
+                                borderRadius: 2,
+                                cursor: 'pointer',
+                                paddingLeft: 0.5
+                            },
+                            '& .MuiInputBase-input': {
+                                p: '4px 0',
+                                width: 50,
+                            },
+                            '& .MuiInput-underline:before': { borderBottom: 'none' },
+                            '& .MuiInput-underline:after': { borderBottom: 'none' },
+                            '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
                         }
                     },
-                    InputProps: { disableUnderline: true, sx: { '&:hover': { bgcolor: 'action.hover' }, borderRadius: 2, px:0 } },
-                },
                 }}
             />
             </LocalizationProvider>
@@ -228,8 +269,7 @@ function App() {
           <HomeMobile
             kbju={kbju}
             summary={summary}
-            onGoToChat={() => setTab("chat")}
-            onGoToCalc={() => setTab("calc")}
+            onNavigateToCalculator={navigateToCalculator}
           />
         )}
         {tab === "calc" && (
@@ -324,8 +364,9 @@ function App() {
 }
 
 // --- ГЛАВНАЯ СТРАНИЦА ---
-function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
+function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
   const caloriesPercentage = Math.min(100, (summary.calories / kbju.calories) * 100 || 0);
+  console.log("caloriesPercentage:", caloriesPercentage); // Добавим для диагностики
 
   const macroData = [
     { name: 'Углеводы', value: summary.carb, goal: kbju.carb, color: 'primary.main', icon: 'grain' },
@@ -334,127 +375,148 @@ function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
   ];
 
   return (
-    <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: {xs: 2, sm: 3}, pb: {xs: 10, sm: 12} }}>
+    <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 2, sm: 3, md: 4 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: {xs: 2, sm: 3, md: 4}, pb: {xs: 4, sm: 5} }}>
       {/* Daily Goal Card */}
-      <Card sx={{ width: '100%', maxWidth: {xs: 380, sm: 420, md: 480}, p: { xs: 2, sm: 2.5 }, textAlign: 'center' }}>
+      <Card 
+        component={motion.div}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        sx={{ 
+          width: '100%', 
+          maxWidth: {xs: 380, sm: 420, md: 480}, 
+          p: { xs: 2, sm: 2.5 }, 
+          textAlign: 'center',
+          boxShadow: '0 4px 20px rgba(66, 133, 244, 0.08)'
+        }}>
         <Typography variant="h6" component="h2" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary', fontSize: {xs: '1rem', sm: '1.15rem'} }}>
           Ваша цель на сегодня
         </Typography>
-        <Box sx={{ position: 'relative', width: { xs: 150, sm: 170, md:180 }, height: { xs: 150, sm: 170, md:180 }, margin: '0 auto', mb: 2.5 }}>
-          <CircularProgress
-            variant="determinate"
-            value={100}
-            size="100%"
-            thickness={2.5}
-            sx={{ color: 'surfaceVariant.main', position: 'absolute', left: 0, top: 0 }}
-          />
-          <CircularProgress
-            variant="determinate"
-            value={caloriesPercentage}
-            size="100%"
-            thickness={2.5}
-            sx={{ color: 'primary.main', position: 'absolute', left: 0, top: 0, '& .MuiCircularProgress-circle': { strokeLinecap: 'round' } }}
-          />
-          <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <span className="material-symbols-rounded" style={{ fontSize: {xs: 30, sm:34}, color: 'var(--mui-palette-primary-main)', marginBottom: '2px' }}>local_fire_department</span>
-            <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.1, fontSize: {xs: '1.8rem', sm: '2rem', md: '2.2rem'} }}>
-              {summary.calories}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: {xs: '0.85rem', sm: '0.9rem'} }}>
-              из {kbju.calories} ккал
-            </Typography>
+        <Box sx={{ 
+          position: 'relative', 
+          width: { xs: 150, sm: 170, md: 180 }, 
+          height: { xs: 150, sm: 170, md: 180 }, 
+          margin: '0 auto', 
+          mb: 2.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          {/* Круг прогресса с абсолютной позицией и высоким z-index */}
+          <Box 
+            sx={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              width: '100%', 
+              height: '100%', 
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <AnimatedCircularProgress 
+              value={caloriesPercentage} 
+              color="var(--mui-palette-primary-main)" 
+              size={150} 
+              thickness={6} 
+            />
+          </Box>
+          
+          {/* Текст внутри круга */}
+          <Box 
+            sx={{ 
+              position: 'relative', 
+              zIndex: 2, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              pointerEvents: 'none', // Чтобы текст не перекрывал круг для кликов
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: {xs: 30, sm:34}, color: 'var(--mui-palette-primary-main)', marginBottom: '2px' }}>local_fire_department</span>
+              <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.1, fontSize: {xs: '1.8rem', sm: '2rem', md: '2.2rem'} }}>
+                {summary.calories}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: {xs: '0.85rem', sm: '0.9rem'} }}>
+                из {kbju.calories} ккал
+              </Typography>
+            </motion.div>
           </Box>
         </Box>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={onGoToCalc} 
-          startIcon={<span className="material-symbols-rounded">add_circle</span>} 
-          sx={{ mt: 1, borderRadius: '20px', px: {xs:2.5, sm:3}, py: {xs: 1, sm: 1.2}, fontSize: {xs:15, sm:16} }}
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.98 }}
         >
-          Добавить приём пищи
-        </Button>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={onNavigateToCalculator} 
+            startIcon={<span className="material-symbols-rounded">add_circle</span>} 
+            sx={{ mt: 1, borderRadius: '20px', px: {xs:2.5, sm:3}, py: {xs: 1, sm: 1.2}, fontSize: {xs:15, sm:16} }}
+          >
+            Добавить приём пищи
+          </Button>
+        </motion.div>
       </Card>
 
       {/* Macronutrients Section */}
-      <Typography variant="h6" component="h3" sx={{ fontWeight: 600, color: 'text.primary', width: '100%', maxWidth: {xs: 380, sm: 420, md: 480}, textAlign: 'left', fontSize: {xs: '1.1rem', sm: '1.2rem'} }}>
-        Макронутриенты
-      </Typography>
-      <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ width: '100%', maxWidth: {xs: 380, sm: 420, md: 480} }}>
-        {macroData.map((macro) => (
-          <Grid xs={12} sm={4} key={macro.name}>
-            <Paper elevation={0} sx={{ p: {xs: 1.5, sm:2}, textAlign: 'center', borderRadius: 3, border: 1, borderColor: 'divider', bgcolor:'background.paper' }}>
-              <span className="material-symbols-rounded" style={{ fontSize: {xs:26, sm:28}, color: macro.color, marginBottom: '8px' }}>{macro.icon}</span>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5, fontSize: {xs: '0.9rem', sm: '0.95rem'} }}>{macro.name}</Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, fontSize: {xs: '0.75rem', sm: '0.8rem'} }}>{macro.value} / {macro.goal} г</Typography>
-              <LinearProgress
-                variant="determinate"
-                value={Math.min(100, (macro.value / macro.goal) * 100 || 0)}
-                sx={{ height: 6, borderRadius: 3, bgcolor: 'surfaceVariant.main', '& .MuiLinearProgress-bar': { bgcolor: macro.color } }}
-              />
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Bottom Action Bar с подписями */}
-      <Paper 
-        elevation={3} 
-        sx={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          bgcolor: 'background.paper',
-          py: { xs: 1.2, sm: 1.5 }, 
-          px: { xs: 1.5, sm: 2 }, 
-          display: 'flex',
-          gap: { xs: 1, sm: 1.5 }, 
-          justifyContent: 'space-around', 
-          borderTopLeftRadius: { xs: 18, sm: 22 },
-          borderTopRightRadius: { xs: 18, sm: 22 },
-          zIndex: (theme) => theme.zIndex.drawer + 1, 
-          borderTop: '1px solid', 
-          borderColor: 'divider'
-      }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={onGoToCalc}
-          sx={{ 
-            flex: 1, 
-            py: {xs:1, sm:1.2}, 
-            fontSize: {xs: '0.85rem', sm: '0.9rem'}, 
-            borderRadius: '20px',
-            display: 'flex', 
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 0.3
-          }}
-        >
-          <span className="material-symbols-rounded" style={{fontSize: 22}}>add</span>
-          <span>Добавить Еду</span>
-        </Button>
-        <Button
-          variant="outlined"
-          color="secondary"
-          onClick={onGoToChat}
-          sx={{ 
-            flex: 1, 
-            py: {xs:1, sm:1.2}, 
-            fontSize: {xs: '0.85rem', sm: '0.9rem'}, 
-            borderRadius: '20px', 
-            borderWidth: 1.5,
-            display: 'flex', 
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 0.3
-          }}
-        >
-          <span className="material-symbols-rounded" style={{fontSize: 22}}>psychology</span>
-          <span>ИИ Тренер</span>
-        </Button>
-      </Paper>
+      <Box sx={{ width: '100%', maxWidth: {xs: 380, sm: 420, md: 480} }}>
+        <Typography variant="h6" component="h3" sx={{ fontWeight: 600, color: 'text.primary', width: '100%', textAlign: 'left', fontSize: {xs: '1.1rem', sm: '1.2rem'}, mb: 1.5 }}>
+          Макронутриенты
+        </Typography>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+          {macroData.map((macro, index) => (
+            <Grid xs={12} sm={4} key={macro.name}>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index, duration: 0.4 }}
+                style={{ height: '100%' }}
+              >
+                <Paper elevation={0} sx={{ 
+                  p: {xs: 1.5, sm:2}, 
+                  textAlign: 'center', 
+                  borderRadius: 3, 
+                  border: 1, 
+                  borderColor: 'divider', 
+                  bgcolor:'background.paper',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <Box sx={{ mb: 1 }}>
+                    <span className="material-symbols-rounded" style={{ fontSize: {xs:26, sm:28}, color: macro.color, marginBottom: '8px' }}>{macro.icon}</span>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5, fontSize: {xs: '0.9rem', sm: '0.95rem'} }}>{macro.name}</Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: {xs: '0.75rem', sm: '0.8rem'} }}>{macro.value} / {macro.goal} г</Typography>
+                  </Box>
+                  <Box sx={{ mt: 'auto', width: '100%' }}>
+                    <LinearProgress
+                      variant="determinate"
+                      value={Math.min(100, (macro.value / macro.goal) * 100 || 0)}
+                      sx={{ 
+                        height: 6, 
+                        borderRadius: 3, 
+                        bgcolor: 'surfaceVariant.main', 
+                        '& .MuiLinearProgress-bar': { 
+                          bgcolor: macro.color,
+                          transition: 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)' // Плавная анимация
+                        } 
+                      }}
+                    />
+                  </Box>
+                </Paper>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
     </Box>
   );
 }
