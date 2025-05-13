@@ -149,16 +149,25 @@ function App() {
     );
   }
 
-  // Общий AppBar для всех страниц
+  const appBarHeight = { xs: 56, sm: 60 }; // Определяем высоту AppBar для использования в padding
+
   const CommonAppBar = (
-    <AppBar position="sticky" elevation={1} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
-      <Toolbar sx={{ minHeight: {xs: 56, sm: 60}, px: { xs: 1, sm: 1.5 } }}>
+    <AppBar 
+      position="sticky" // Sticky позволяет AppBar оставаться в потоке, но прилипать при скролле
+      elevation={1} 
+      sx={{ 
+        bgcolor: 'background.paper', 
+        borderBottom: 1, 
+        borderColor: 'divider',
+        height: appBarHeight // Явно задаем высоту
+      }}
+    >
+      <Toolbar sx={{ minHeight: appBarHeight, px: { xs: 1, sm: 1.5 } }}>
         <Box sx={{display: 'flex', alignItems: 'center', flexShrink: 0, mr: {xs: 0.5, sm:1}}}>
             <IconButton 
                 aria-label="Open date picker" 
                 onClick={(e) => {
-                    // Ищем input DatePicker внутри родительского элемента IconButton
-                    const datePickerInput = e.currentTarget.parentElement?.querySelector('input[placeholder="MM/DD"]'); // Используем placeholder для поиска
+                    const datePickerInput = e.currentTarget.parentElement?.querySelector('input[placeholder="MM/DD"]');
                     if (datePickerInput && typeof datePickerInput.click === 'function') {
                         datePickerInput.click();
                     }
@@ -168,7 +177,7 @@ function App() {
             >
                 <span className="material-symbols-rounded" style={{fontSize: {xs: '22px', sm: '24px'}}}>calendar_month</span>
             </IconButton>
-            <LocalizationProvider dateAdapter={AdapterDateFns} /* adapterLocale={ru} - можно добавить если нужна строгая русская локаль */ >
+            <LocalizationProvider dateAdapter={AdapterDateFns} >
             <DatePicker
                 value={selectedDate}
                 onChange={setSelectedDate}
@@ -177,7 +186,6 @@ function App() {
                 slotProps={{
                 textField: {
                     variant: 'standard',
-                    // Добавляем aria-label для более надежного поиска, если placeholder изменится
                     inputProps: { 'aria-label': 'Choose date' }, 
                     sx: { 
                         width: {xs: 55, sm: 60}, 
@@ -199,7 +207,7 @@ function App() {
         <Typography 
             variant="h6" 
             sx={{ 
-                flexGrow: 1, // Чтобы занимал оставшееся пространство и центрировал текст
+                flexGrow: 1, 
                 fontWeight: 700, 
                 color: 'text.primary', 
                 letterSpacing: '.01em', 
@@ -221,8 +229,8 @@ function App() {
   );
 
   return (
-    <Box sx={{ height: "100vh", display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden'}}> {/* Заменил div на Box для консистентности */} 
-      {CommonAppBar} {/* Общий AppBar для всех страниц */}
+    <Box sx={{ height: "100vh", display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden'}}> 
+      {CommonAppBar}
       <SideMenu
         open={sideMenuOpen}
         onClose={() => setSideMenuOpen(false)}
@@ -230,9 +238,18 @@ function App() {
         onSelect={setTab}
         profile={profile}
       />
-      {/* Основной контейнер для контента страницы, обеспечивающий скролл только для себя */}
-      <Box sx={{flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', width: '100%'}}> 
-        {/* Убедимся, что у всех дочерних компонентов-страниц есть flexGrow: 1 или они занимают всю высоту */} 
+      {/* Основной контейнер для контента страницы */}
+      <Box 
+        component="main" // Семантически правильный тег для основного контента
+        sx={{
+          flexGrow: 1, // Занимает всё доступное пространство
+          overflowY: 'auto', // Включает скролл только для этой области
+          width: '100%',
+          // paddingTop: appBarHeight, // Если AppBar position="fixed". Для sticky не всегда нужен.
+          // Вместо paddingTop, AppBar (sticky) сам будет управлять потоком.
+          // Убедимся, что дочерние компоненты страниц (HomeMobile и т.д.) не имеют своего верхнего отступа, мешающего AppBar
+        }}
+      > 
         {tab === "home" && (
           <HomeMobile
             kbju={kbju}
@@ -288,7 +305,7 @@ function App() {
               display: 'flex', 
               flexDirection: 'column', 
               alignItems: 'center',
-              justifyContent: 'center', // Центрируем заглушку по вертикали
+              justifyContent: 'center',
               flexGrow: 1, 
               boxSizing: 'border-box'
             }}
@@ -343,7 +360,7 @@ function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
   ];
 
   return (
-    <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: {xs: 2, sm: 3}, pb: {xs: 10, sm: 12} /* Отступ для Bottom Bar*/ }}>
+    <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: {xs: 2, sm: 3}, pb: {xs: 10, sm: 12} }}>
       {/* Daily Goal Card */}
       <Card sx={{ width: '100%', maxWidth: {xs: 380, sm: 420, md: 480}, p: { xs: 2, sm: 2.5 }, textAlign: 'center' }}>
         <Typography variant="h6" component="h2" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary', fontSize: {xs: '1rem', sm: '1.15rem'} }}>
@@ -415,14 +432,14 @@ function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
           left: 0,
           right: 0,
           bgcolor: 'background.paper',
-          py: { xs: 1.2, sm: 1.5 }, // Уменьшил вертикальные отступы
-          px: { xs: 1.5, sm: 2 }, // Уменьшил горизонтальные отступы
+          py: { xs: 1.2, sm: 1.5 }, 
+          px: { xs: 1.5, sm: 2 }, 
           display: 'flex',
-          gap: { xs: 1, sm: 1.5 }, // Уменьшил расстояние между кнопками
-          justifyContent: 'space-around', // Равномерное распределение
+          gap: { xs: 1, sm: 1.5 }, 
+          justifyContent: 'space-around', 
           borderTopLeftRadius: { xs: 18, sm: 22 },
           borderTopRightRadius: { xs: 18, sm: 22 },
-          zIndex: (theme) => theme.zIndex.drawer + 1, // Выше SideMenu при открытии
+          zIndex: (theme) => theme.zIndex.drawer + 1, 
           borderTop: '1px solid', 
           borderColor: 'divider'
       }}>
@@ -431,7 +448,7 @@ function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
           color="primary"
           onClick={onGoToCalc}
           startIcon={<span className="material-symbols-rounded">add</span>}
-          sx={{ flex: 1, py: {xs:1, sm:1.2}, fontSize: {xs: '0.85rem', sm: '0.9rem'}, borderRadius: '20px'}} // Уменьшил кнопки и скругление
+          sx={{ flex: 1, py: {xs:1, sm:1.2}, fontSize: {xs: '0.85rem', sm: '0.9rem'}, borderRadius: '20px'}}
         >
           Добавить Еду
         </Button>
@@ -440,7 +457,7 @@ function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
           color="secondary"
           onClick={onGoToChat}
           startIcon={<span className="material-symbols-rounded">psychology</span>}
-          sx={{ flex: 1, py: {xs:1, sm:1.2}, fontSize: {xs: '0.85rem', sm: '0.9rem'}, borderRadius: '20px', borderWidth: 1.5}} // Уменьшил кнопки и скругление
+          sx={{ flex: 1, py: {xs:1, sm:1.2}, fontSize: {xs: '0.85rem', sm: '0.9rem'}, borderRadius: '20px', borderWidth: 1.5}}
         >
           ИИ Тренер
         </Button>
