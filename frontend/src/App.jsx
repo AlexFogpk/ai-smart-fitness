@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-// import { motion, AnimatePresence } from "framer-motion"; // Не используется
-import { FaBars } from "react-icons/fa";
+import { motion } from "framer-motion"; // Убедимся, что motion используется или удалим позже
+// import { FaBars } from "react-icons/fa"; // Старый гамбургер, удаляем
 import SideMenu from "./SideMenu";
 import LogoRobot from "./LoadingLogos";
 // import { PiBowlFoodFill } from "react-icons/pi"; // Заменено на Material Symbols
@@ -34,7 +34,6 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { ru } from 'date-fns/locale';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
-import { motion } from 'framer-motion';
 
 // ------ Утилиты ------
 function getKBJU({ sex, weight, height, age, activity, goal }) {
@@ -81,26 +80,14 @@ function App() {
   const [stage, setStage] = useState("splash");
   const [tab, setTab] = useState("home");
   const [profile, setProfile] = useState(defaultProfile);
-
-  // Имя Telegram
-  // const [telegramName, setTelegramName] = useState(""); // Не используется напрямую в App или HomeMobile
-  // useEffect(() => {
-  //   if (
-  //     window.Telegram &&
-  //     window.Telegram.WebApp &&
-  //     window.Telegram.WebApp.initDataUnsafe?.user?.first_name
-  //   ) {
-  //     setTelegramName(window.Telegram.WebApp.initDataUnsafe.user.first_name);
-  //   }
-  // }, []);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [sideMenuOpen, setSideMenuOpen] = useState(false);
 
   useEffect(() => {
     if (stage === "splash") {
-      setTimeout(() => setStage("app"), 3000);
+      setTimeout(() => setStage("app"), 1500); // Уменьшил время сплэш-скрина для тестирования
     }
   }, [stage]);
-
-  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const kbju = getKBJU(profile);
   const [mealsByType, setMealsByType] = useState(initialMealsByType);
@@ -125,55 +112,87 @@ function App() {
   const [calcType, setCalcType] = useState("breakfast");
   // const [calcMode, setCalcMode] = useState("manual"); // Не используется
   // const [aiLoading, setAiLoading] = useState(false); // Не используется
-  const [sideMenuOpen, setSideMenuOpen] = useState(false);
-
-  const Hamburger = (
-    <IconButton
-      aria-label="Меню"
-      onClick={() => setSideMenuOpen(true)}
-      sx={{
-        position: "fixed", 
-        right: 18, 
-        top: 18, 
-        zIndex: (theme) => theme.zIndex.drawer + 2, // Выше AppBar
-        backgroundColor: 'background.paper',
-        color: 'primary.main',
-        padding: '8px', // Уменьшил padding
-        boxShadow: 3,
-        '&:hover': {
-          backgroundColor: 'action.hover',
-        }
-      }}
-    >
-      <FaBars fontSize="20px" /> {/* Указал размер иконки */} 
-    </IconButton>
-  );
 
   if (stage === "splash") {
     return (
       <Box sx={{
         minHeight: "100vh", 
         width: "100vw", 
-        background: "linear-gradient(120deg,#eef5fe 30%,#dffcf9 90%)",
+        // Более спокойный фон в стиле Material 3
+        background: (theme) => `linear-gradient(145deg, ${theme.palette.surfaceVariant.main} 0%, ${theme.palette.background.default} 100%)`,
         display: "flex", 
         flexDirection: "column", 
         alignItems: "center", 
-        justifyContent: "center"
+        justifyContent: "center",
+        p: 3,
+        overflow: 'hidden' // Предотвращаем любой скролл на сплеше
       }}>
-        <LogoRobot />
-        <Typography variant="h4" component="div" sx={{ color: "primary.main", fontWeight: 800, letterSpacing: ".01em", mt: 2 }}>
-          SmartFitness AI
-        </Typography>
-        <Typography variant="subtitle1" component="div" sx={{ mt: 1, color: "text.secondary", fontWeight: 600, letterSpacing: ".02em" }}>
-          Загрузка...
-        </Typography>
+        <motion.div // Анимация для контента
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}
+        >
+          {/* Можно оставить LogoRobot или заменить на Material Symbol */}
+          {/* <span className="material-symbols-rounded" style={{ fontSize: 80, color: 'var(--mui-palette-primary-main)', marginBottom: '24px' }}>smart_toy</span> */}
+          <LogoRobot /> 
+          <Typography variant="h3" component="div" sx={{ color: "primary.main", fontWeight: 700, letterSpacing: ".01em", mt: 3, mb:1, textAlign: 'center' }}>
+            SmartFitness AI
+          </Typography>
+          <Typography variant="subtitle1" component="div" sx={{ color: "text.secondary", fontWeight: 500, letterSpacing: ".02em", mb: 4, textAlign: 'center' }}>
+            Персональный ИИ-тренер и диетолог
+          </Typography>
+          <CircularProgress color="primary" size={36} thickness={3.6} />
+        </motion.div>
       </Box>
     );
   }
 
+  // Общий AppBar для всех страниц
+  const CommonAppBar = (
+    <AppBar position="sticky" elevation={1} sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
+      <Toolbar sx={{ minHeight: {xs: 56, sm: 60}, px: { xs: 1, sm: 2 } }}>
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+          <DatePicker
+            value={selectedDate}
+            onChange={setSelectedDate}
+            format="MM/dd"
+            slots={{ 
+                openPickerIcon: () => <span className="material-symbols-rounded" style={{color: 'var(--mui-palette-primary-main)', marginRight: '4px', fontSize: '22px'}}>calendar_month</span>,
+            }}
+            slotProps={{
+              textField: {
+                variant: 'standard',
+                sx: { 
+                    width: {xs: 70, sm: 80}, 
+                    mr: { xs: 0.5, sm: 1 }, 
+                    ml: {xs: -0.5, sm: 0},
+                    '& .MuiInputBase-input': {
+                        fontWeight: 600, 
+                        fontSize: {xs: '0.95rem', sm: '1rem'}, 
+                        color: 'text.primary',
+                        py: '6px',
+                        textAlign: 'center'
+                    }
+                },
+                InputProps: { disableUnderline: true, sx: { '&:hover': { bgcolor: 'action.hover' }, borderRadius: 2, px:0.5 } },
+              },
+            }}
+          />
+        </LocalizationProvider>
+        <Typography variant="h6" sx={{ flex: 1, fontWeight: 700, color: 'text.primary', letterSpacing: '.01em', fontSize: { xs: '1.05rem', sm: '1.2rem' }, textAlign: 'center', mx: {xs: 0.5, sm: 1} }}>
+          SmartFitness AI
+        </Typography>
+        <IconButton color="primary" onClick={() => setSideMenuOpen(true)} sx={{ p: {xs: 0.75, sm: 1} }}>
+          <span className="material-symbols-rounded" style={{fontSize: '26px'}}>menu</span>
+        </IconButton>
+      </Toolbar>
+    </AppBar>
+  );
+
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: 'background.default'}}> {/* Заменил div на Box для консистентности */} 
-      {Hamburger} {/* Гамбургер теперь отображается здесь, над всем */} 
+    <Box sx={{ height: "100vh", display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden'}}> {/* Заменил div на Box для консистентности */} 
+      {CommonAppBar} {/* Общий AppBar для всех страниц */}
       <SideMenu
         open={sideMenuOpen}
         onClose={() => setSideMenuOpen(false)}
@@ -181,32 +200,22 @@ function App() {
         onSelect={setTab}
         profile={profile}
       />
-      {/* AnimatePresence не нужен, если нет анимаций смены вкладок в App.jsx */}
-      {/* <AnimatePresence mode="wait"> */}
+      {/* Основной контейнер для контента страницы, обеспечивающий скролл только для себя */}
+      <Box sx={{flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', width: '100%'}}> 
+        {/* Убедимся, что у всех дочерних компонентов-страниц есть flexGrow: 1 или они занимают всю высоту */} 
         {tab === "home" && (
           <HomeMobile
-            // profile={profile} // profile не используется в HomeMobile
             kbju={kbju}
             summary={summary}
-            // allMeals={allMeals} // allMeals не используется в HomeMobile
             onGoToChat={() => setTab("chat")}
             onGoToCalc={() => setTab("calc")}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            onMenuOpen={() => setSideMenuOpen(true)} // Передаем функцию открытия меню
           />
         )}
         {tab === "calc" && (
           <CalculatorMobile
-            // kbju={kbju} // Закомментировано в MobileExtra.jsx
-            // mealsByType={mealsByType} // Закомментировано в MobileExtra.jsx, но сам mealsByType нужен в App
             setMealsByType={setMealsByType}
             calcType={calcType}
             setCalcType={setCalcType}
-            // calcMode={calcMode} // Закомментировано в MobileExtra.jsx
-            // setCalcMode={setCalcMode} // Закомментировано в MobileExtra.jsx
-            // aiLoading={aiLoading} // Закомментировано в MobileExtra.jsx
-            // setAiLoading={setAiLoading} // Закомментировано в MobileExtra.jsx
             onBack={() => setTab("home")}
           />
         )}
@@ -242,15 +251,15 @@ function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            maxWidth="sm"
+            maxWidth="sm" 
             sx={{ 
               pt: { xs: 2, sm: 3 }, 
               pb: { xs: 2, sm: 3 }, 
-              mt: {xs: 7, sm: 8},
               display: 'flex', 
               flexDirection: 'column', 
               alignItems: 'center',
-              minHeight: 'calc(100vh - 56px)',
+              justifyContent: 'center', // Центрируем заглушку по вертикали
+              flexGrow: 1, 
               boxSizing: 'border-box'
             }}
           >
@@ -259,7 +268,7 @@ function App() {
                 sx={{
                   width: '100%',
                   maxWidth: 520,
-                  p: { xs: 3, sm: 4 },
+                  p: { xs: 3, sm: 4 }, 
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -288,16 +297,13 @@ function App() {
             </Paper>
           </Container>
         )}
-      {/* </AnimatePresence> */}
+      </Box>
     </Box>
   );
 }
 
 // --- ГЛАВНАЯ СТРАНИЦА ---
-function HomeMobile({ kbju, summary, /*allMeals,*/ onGoToChat, onGoToCalc, selectedDate, setSelectedDate, onMenuOpen }) {
-  // const [anchorEl, setAnchorEl] = React.useState(null); // Не используется, меню открывается через App state
-  // const handleMenuOpen = (event) => setAnchorEl(event.currentTarget); // Заменено
-  // const handleMenuClose = () => setAnchorEl(null); // Заменено
+function HomeMobile({ kbju, summary, onGoToChat, onGoToCalc }) {
   const caloriesPercentage = Math.min(100, (summary.calories / kbju.calories) * 100 || 0);
 
   const macroData = [
@@ -307,101 +313,68 @@ function HomeMobile({ kbju, summary, /*allMeals,*/ onGoToChat, onGoToCalc, selec
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
-      {/* Top App Bar */}
-      <AppBar position="sticky" color="inherit" elevation={1} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Toolbar sx={{ minHeight: 56, px: { xs: 1, sm: 2 } }}>
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
-            <DatePicker
-              value={selectedDate}
-              onChange={setSelectedDate}
-              format="MM/dd"
-              slotProps={{
-                textField: {
-                  variant: 'standard',
-                  sx: { minWidth: 70, mr: { xs: 0.5, sm: 2 }, fontWeight: 700, fontSize: 15 },
-                  InputProps: { disableUnderline: true, sx: { '&:hover': { bgcolor: 'action.hover' }, borderRadius: 1 } },
-                },
-                openPickerButton: {
-                  sx: { color: 'primary.main' }
-                }
-              }}
-            />
-          </LocalizationProvider>
-          <Typography variant="h6" sx={{ flex: 1, fontWeight: 700, color: 'text.primary', letterSpacing: '.01em', fontSize: { xs: 17, sm: 19 }, textAlign: 'center' }}>
-            SmartFitness AI
-          </Typography>
-          <IconButton color="primary" onClick={onMenuOpen} sx={{ ml: { xs: 0.5, sm: 1 } }}>
-            <span className="material-symbols-rounded">menu</span>
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-
-      {/* Main Content Scrollable Area */}
-      <Box sx={{ flex: 1, overflowY: 'auto', p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, pb: 12 }}>
-        
-        {/* Daily Goal Card */}
-        <Card sx={{ width: '100%', maxWidth: 500, p: { xs: 2, sm: 3 }, textAlign: 'center' }}>
-          <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
-            Ваша цель на сегодня
-          </Typography>
-          <Box sx={{ position: 'relative', width: { xs: 180, sm: 200 }, height: { xs: 180, sm: 200 }, margin: '0 auto', mb: 2 }}>
-            <CircularProgress
-              variant="determinate"
-              value={100}
-              size="100%"
-              thickness={2.5}
-              sx={{ color: 'surfaceVariant.main', position: 'absolute', left: 0, top: 0 }}
-            />
-            <CircularProgress
-              variant="determinate"
-              value={caloriesPercentage}
-              size="100%"
-              thickness={2.5}
-              sx={{ color: 'primary.main', position: 'absolute', left: 0, top: 0, '& .MuiCircularProgress-circle': { strokeLinecap: 'round' } }}
-            />
-            <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <span className="material-symbols-rounded" style={{ fontSize: 36, color: 'var(--mui-palette-primary-main)', marginBottom: '4px' }}>local_fire_department</span>
-              <Typography variant="h3" component="div" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.1 }}>
-                {summary.calories}
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                из {kbju.calories} ккал
-              </Typography>
-            </Box>
-          </Box>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={onGoToCalc} 
-            startIcon={<span className="material-symbols-rounded">add_circle</span>} 
-            sx={{ mt: 1, borderRadius: '20px', px:3, py: 1.2, fontSize: 16 }}
-          >
-            Добавить приём пищи
-          </Button>
-        </Card>
-
-        {/* Macronutrients Section */}
-        <Typography variant="h6" component="h3" sx={{ fontWeight: 600, color: 'text.primary', width: '100%', maxWidth: 500, textAlign: 'left' }}>
-          Макронутриенты
+    <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: {xs: 2, sm: 3}, pb: {xs: 10, sm: 12} /* Отступ для Bottom Bar*/ }}>
+      {/* Daily Goal Card */}
+      <Card sx={{ width: '100%', maxWidth: {xs: 380, sm: 420, md: 480}, p: { xs: 2, sm: 2.5 }, textAlign: 'center' }}>
+        <Typography variant="h6" component="h2" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary', fontSize: {xs: '1rem', sm: '1.15rem'} }}>
+          Ваша цель на сегодня
         </Typography>
-        <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ width: '100%', maxWidth: 500 }}>
-          {macroData.map((macro) => (
-            <Grid item xs={12} sm={4} key={macro.name}>
-              <Paper elevation={0} sx={{ p: 2, textAlign: 'center', borderRadius: 3, border: 1, borderColor: 'divider', bgcolor:'background.paper' }}>
-                <span className="material-symbols-rounded" style={{ fontSize: 30, color: macro.color, marginBottom: '8px' }}>{macro.icon}</span>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5 }}>{macro.name}</Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>{macro.value} / {macro.goal} г</Typography>
-                <LinearProgress
-                  variant="determinate"
-                  value={Math.min(100, (macro.value / macro.goal) * 100 || 0)}
-                  sx={{ height: 6, borderRadius: 3, bgcolor: 'surfaceVariant.main', '& .MuiLinearProgress-bar': { bgcolor: macro.color } }}
-                />
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+        <Box sx={{ position: 'relative', width: { xs: 150, sm: 170, md:180 }, height: { xs: 150, sm: 170, md:180 }, margin: '0 auto', mb: 2.5 }}>
+          <CircularProgress
+            variant="determinate"
+            value={100}
+            size="100%"
+            thickness={2.5}
+            sx={{ color: 'surfaceVariant.main', position: 'absolute', left: 0, top: 0 }}
+          />
+          <CircularProgress
+            variant="determinate"
+            value={caloriesPercentage}
+            size="100%"
+            thickness={2.5}
+            sx={{ color: 'primary.main', position: 'absolute', left: 0, top: 0, '& .MuiCircularProgress-circle': { strokeLinecap: 'round' } }}
+          />
+          <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="material-symbols-rounded" style={{ fontSize: {xs: 30, sm:34}, color: 'var(--mui-palette-primary-main)', marginBottom: '2px' }}>local_fire_department</span>
+            <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.1, fontSize: {xs: '1.8rem', sm: '2rem', md: '2.2rem'} }}>
+              {summary.calories}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: {xs: '0.85rem', sm: '0.9rem'} }}>
+              из {kbju.calories} ккал
+            </Typography>
+          </Box>
+        </Box>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={onGoToCalc} 
+          startIcon={<span className="material-symbols-rounded">add_circle</span>} 
+          sx={{ mt: 1, borderRadius: '20px', px: {xs:2.5, sm:3}, py: {xs: 1, sm: 1.2}, fontSize: {xs:15, sm:16} }}
+        >
+          Добавить приём пищи
+        </Button>
+      </Card>
+
+      {/* Macronutrients Section */}
+      <Typography variant="h6" component="h3" sx={{ fontWeight: 600, color: 'text.primary', width: '100%', maxWidth: {xs: 380, sm: 420, md: 480}, textAlign: 'left', fontSize: {xs: '1.1rem', sm: '1.2rem'} }}>
+        Макронутриенты
+      </Typography>
+      <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ width: '100%', maxWidth: {xs: 380, sm: 420, md: 480} }}>
+        {macroData.map((macro) => (
+          <Grid item xs={12} sm={4} key={macro.name}>
+            <Paper elevation={0} sx={{ p: {xs: 1.5, sm:2}, textAlign: 'center', borderRadius: 3, border: 1, borderColor: 'divider', bgcolor:'background.paper' }}>
+              <span className="material-symbols-rounded" style={{ fontSize: {xs:26, sm:28}, color: macro.color, marginBottom: '8px' }}>{macro.icon}</span>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5, fontSize: {xs: '0.9rem', sm: '0.95rem'} }}>{macro.name}</Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, fontSize: {xs: '0.75rem', sm: '0.8rem'} }}>{macro.value} / {macro.goal} г</Typography>
+              <LinearProgress
+                variant="determinate"
+                value={Math.min(100, (macro.value / macro.goal) * 100 || 0)}
+                sx={{ height: 6, borderRadius: 3, bgcolor: 'surfaceVariant.main', '& .MuiLinearProgress-bar': { bgcolor: macro.color } }}
+              />
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
 
       {/* Bottom Action Bar */}
       <Paper 
@@ -412,14 +385,14 @@ function HomeMobile({ kbju, summary, /*allMeals,*/ onGoToChat, onGoToCalc, selec
           left: 0,
           right: 0,
           bgcolor: 'background.paper',
-          py: { xs: 1.5, sm: 2 },
-          px: { xs: 2, sm: 3 },
+          py: { xs: 1.2, sm: 1.5 }, // Уменьшил вертикальные отступы
+          px: { xs: 1.5, sm: 2 }, // Уменьшил горизонтальные отступы
           display: 'flex',
-          gap: { xs: 1.5, sm: 2 },
-          justifyContent: 'center',
-          borderTopLeftRadius: { xs: 20, sm: 24 },
-          borderTopRightRadius: { xs: 20, sm: 24 },
-          zIndex: (theme) => theme.zIndex.appBar, 
+          gap: { xs: 1, sm: 1.5 }, // Уменьшил расстояние между кнопками
+          justifyContent: 'space-around', // Равномерное распределение
+          borderTopLeftRadius: { xs: 18, sm: 22 },
+          borderTopRightRadius: { xs: 18, sm: 22 },
+          zIndex: (theme) => theme.zIndex.drawer + 1, // Выше SideMenu при открытии
           borderTop: '1px solid', 
           borderColor: 'divider'
       }}>
@@ -428,7 +401,7 @@ function HomeMobile({ kbju, summary, /*allMeals,*/ onGoToChat, onGoToCalc, selec
           color="primary"
           onClick={onGoToCalc}
           startIcon={<span className="material-symbols-rounded">add</span>}
-          sx={{ flexGrow: 1, py: 1.5, fontSize: {xs: 15, sm: 16}, borderRadius: '28px'}}
+          sx={{ flex: 1, py: {xs:1, sm:1.2}, fontSize: {xs: '0.85rem', sm: '0.9rem'}, borderRadius: '20px'}} // Уменьшил кнопки и скругление
         >
           Добавить Еду
         </Button>
@@ -437,7 +410,7 @@ function HomeMobile({ kbju, summary, /*allMeals,*/ onGoToChat, onGoToCalc, selec
           color="secondary"
           onClick={onGoToChat}
           startIcon={<span className="material-symbols-rounded">psychology</span>}
-          sx={{ flexGrow: 1, py: 1.5, fontSize: {xs: 15, sm: 16}, borderRadius: '28px', borderWidth: 1.5}}
+          sx={{ flex: 1, py: {xs:1, sm:1.2}, fontSize: {xs: '0.85rem', sm: '0.9rem'}, borderRadius: '20px', borderWidth: 1.5}} // Уменьшил кнопки и скругление
         >
           ИИ Тренер
         </Button>
