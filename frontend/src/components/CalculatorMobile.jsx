@@ -22,7 +22,141 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 // Компонент для ручного ввода данных о блюде
 function ManualInputForm({ meal, setMeal, nameInputRef, currentTypeColor, inputVariants }) {
-  // ... Код ManualInputForm ...
+  // Список эмодзи для выбора
+  const emojis = ["🍗", "🥗", "🍎", "🍞", "🥛", "🍳", "🍚", "🥩", "🍕", "🥑", "🍌", "🥤"];
+
+  // Обработчик изменения полей
+  const handleChange = (field) => (e) => {
+    setMeal((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  return (
+    <motion.div
+      key="manual-form"
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      variants={{
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 }
+      }}
+      style={{ width: '100%' }}
+    >
+      <motion.div variants={inputVariants}>
+        <TextField
+          inputRef={nameInputRef}
+          label="Название блюда"
+          value={meal.name}
+          onChange={handleChange('name')}
+          fullWidth
+          autoFocus
+          placeholder="Например: Омлет с сыром"
+          sx={{ mb: 1.5 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <span className="material-symbols-rounded" style={{ color: currentTypeColor }}>restaurant</span>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </motion.div>
+      <Grid container spacing={1.2} sx={{ mb: 1.5 }}>
+        <Grid item xs={6} sm={4}>
+          <TextField
+            label="Граммы"
+            value={meal.grams}
+            onChange={handleChange('grams')}
+            type="number"
+            inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]*' }}
+            fullWidth
+            InputProps={{
+              endAdornment: <InputAdornment position="end">г</InputAdornment>,
+            }}
+          />
+        </Grid>
+        <Grid item xs={6} sm={4}>
+          <TextField
+            label="Калории"
+            value={meal.calories}
+            onChange={handleChange('calories')}
+            type="number"
+            inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]*' }}
+            fullWidth
+            InputProps={{
+              endAdornment: <InputAdornment position="end">ккал</InputAdornment>,
+            }}
+          />
+        </Grid>
+        <Grid item xs={4} sm={4}>
+          <TextField
+            label="Белки"
+            value={meal.protein}
+            onChange={handleChange('protein')}
+            type="number"
+            inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]*' }}
+            fullWidth
+            InputProps={{
+              endAdornment: <InputAdornment position="end">г</InputAdornment>,
+            }}
+          />
+        </Grid>
+        <Grid item xs={4} sm={4}>
+          <TextField
+            label="Жиры"
+            value={meal.fat}
+            onChange={handleChange('fat')}
+            type="number"
+            inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]*' }}
+            fullWidth
+            InputProps={{
+              endAdornment: <InputAdornment position="end">г</InputAdornment>,
+            }}
+          />
+        </Grid>
+        <Grid item xs={4} sm={4}>
+          <TextField
+            label="Углеводы"
+            value={meal.carb}
+            onChange={handleChange('carb')}
+            type="number"
+            inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]*' }}
+            fullWidth
+            InputProps={{
+              endAdornment: <InputAdornment position="end">г</InputAdornment>,
+            }}
+          />
+        </Grid>
+      </Grid>
+      <Box sx={{ mb: 1.5 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5 }}>
+          Эмодзи (опционально):
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
+          {emojis.map((emoji) => (
+            <Chip
+              key={emoji}
+              label={emoji}
+              onClick={() => setMeal((m) => ({ ...m, emoji }))}
+              sx={{
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+                bgcolor: meal.emoji === emoji ? 'primary.light' : 'surfaceVariant.main',
+                '&:hover': {
+                  bgcolor: meal.emoji === emoji ? 'primary.light' : 'action.hover',
+                },
+                border: meal.emoji === emoji ? '2px solid' : 'none',
+                borderColor: meal.emoji === emoji ? currentTypeColor : 'transparent',
+              }}
+              component={motion.div}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            />
+          ))}
+        </Box>
+      </Box>
+    </motion.div>
+  );
 }
 
 // Компонент для ввода данных через ИИ
