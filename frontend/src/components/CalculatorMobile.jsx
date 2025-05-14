@@ -489,14 +489,15 @@ export default function CalculatorMobile({
       exit="exit"
       maxWidth="sm"
       sx={{
-        pt: { xs: 2, sm: 3 }, 
-        pb: { xs: 2, sm: 3 }, 
+        pt: { xs: 1.5, sm: 2 }, 
+        pb: { xs: 1.5, sm: 2 }, 
         display: 'flex', 
         flexDirection: 'column', 
         alignItems: 'center',
         minHeight: 'calc(100vh - 56px)',
         boxSizing: 'border-box',
-        overflow: 'hidden' 
+        overflow: 'hidden',
+        px: { xs: 1.5, sm: 2 }
       }}
     >
       <Paper 
@@ -504,10 +505,10 @@ export default function CalculatorMobile({
         sx={{
           width: '100%', 
           maxWidth: 480,
-          p: { xs: 2.5, sm: 3 }, 
+          p: { xs: 2, sm: 2.5 }, 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: 2,
+          gap: { xs: 1.5, sm: 2 },
           borderRadius: 3,
           position: 'relative',
           overflow: 'hidden'
@@ -532,11 +533,11 @@ export default function CalculatorMobile({
               onClick={onBack} 
               aria-label="Назад" 
               color="primary"
-              sx={{ mr: 1, ml: -1 }}
+              sx={{ mr: 1, ml: -1, p: { xs: 0.5, sm: 0.75 } }}
             >
-              <span className="material-symbols-rounded">arrow_back</span>
+              <span className="material-symbols-rounded" style={{ fontSize: { xs: 20, sm: 24 } }}>arrow_back</span>
             </IconButton>
-            <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+            <Typography variant="h5" component="h1" sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
               Добавить приём пищи
             </Typography>
           </Box>
@@ -579,8 +580,8 @@ export default function CalculatorMobile({
               my: 0.5,
               border: 0,
               borderRadius: '24px !important',
-              padding: '8px 12px',
-              fontSize: {xs: '0.8rem', sm: '0.875rem'},
+              padding: { xs: '6px 8px', sm: '8px 12px' },
+              fontSize: {xs: '0.75rem', sm: '0.875rem'},
               color: 'text.secondary',
               transition: 'all 0.2s ease',
               '&.Mui-selected': {
@@ -606,8 +607,8 @@ export default function CalculatorMobile({
               <span 
                 className="material-symbols-rounded" 
                 style={{
-                  marginRight: 6, 
-                  fontSize: 18,
+                  marginRight: { xs: 4, sm: 6 }, 
+                  fontSize: { xs: 16, sm: 18 },
                   color: calcType === type.value ? '#fff' : type.color
                 }}
               >
@@ -627,23 +628,23 @@ export default function CalculatorMobile({
             borderBottom: 1, 
             borderColor: 'divider',
             '& .MuiTab-root': {
-              minHeight: 48,
+              minHeight: { xs: 40, sm: 48 },
               fontWeight: 600,
               textTransform: 'none',
-              fontSize: '0.95rem'
+              fontSize: { xs: '0.85rem', sm: '0.95rem' }
             }
           }}
         >
           <Tab 
             value="manual" 
             label="Ручной ввод" 
-            icon={<span className="material-symbols-rounded" style={{fontSize: 20}}>edit</span>} 
+            icon={<span className="material-symbols-rounded" style={{fontSize: { xs: 18, sm: 20 }}}>edit</span>} 
             iconPosition="start"
           />
           <Tab 
             value="ai" 
             label="ИИ-помощник" 
-            icon={<span className="material-symbols-rounded" style={{fontSize: 20}}>smart_toy</span>}
+            icon={<span className="material-symbols-rounded" style={{fontSize: { xs: 18, sm: 20 }}}>smart_toy</span>}
             iconPosition="start"
           />
         </Tabs>
@@ -689,8 +690,8 @@ export default function CalculatorMobile({
               disabled={!meal.name || !meal.grams || submitted || isAnalyzing}
               startIcon={<span className="material-symbols-rounded">add_task</span>}
               sx={{ 
-                py: 1.5, 
-                fontSize: 16, 
+                py: { xs: 1.2, sm: 1.5 }, 
+                fontSize: { xs: 14, sm: 16 }, 
                 borderRadius: '28px',
                 boxShadow: '0 4px 10px rgba(25, 118, 210, 0.25)',
                 bgcolor: currentTypeColor,

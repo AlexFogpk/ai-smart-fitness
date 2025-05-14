@@ -385,7 +385,19 @@ function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
   ];
 
   return (
-    <Box sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 2, sm: 3, md: 4 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: {xs: 2, sm: 3, md: 4}, pb: {xs: 4, sm: 5} }}>
+    <Box sx={{ 
+      flexGrow: 1, 
+      overflowY: 'auto', 
+      p: { xs: 1.5, sm: 2, md: 3 }, 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      gap: {xs: 1.5, sm: 2, md: 3}, 
+      pb: {xs: 3, sm: 4},
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box'
+    }}>
       {/* Daily Goal Card */}
       <Card 
         component={motion.div}
@@ -394,72 +406,50 @@ function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
         transition={{ duration: 0.5 }}
         sx={{ 
           width: '100%', 
-          maxWidth: {xs: 380, sm: 420, md: 480}, 
-          p: { xs: 2, sm: 2.5 }, 
+          maxWidth: {xs: '100%', sm: 420, md: 480}, 
+          p: { xs: 1.5, sm: 2, md: 2.5 }, 
           textAlign: 'center',
           boxShadow: '0 4px 20px rgba(66, 133, 244, 0.08)'
         }}>
-        <Typography variant="h6" component="h2" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary', fontSize: {xs: '1rem', sm: '1.15rem'} }}>
+        <Typography variant="h6" component="h2" sx={{ mb: 1.5, fontWeight: 600, color: 'text.secondary', fontSize: {xs: '0.95rem', sm: '1.1rem', md: '1.15rem'} }}>
           Ваша цель на сегодня
         </Typography>
         <Box sx={{ 
           position: 'relative', 
-          width: { xs: 150, sm: 170, md: 180 }, 
-          height: { xs: 150, sm: 170, md: 180 }, 
+          width: { xs: 130, sm: 150, md: 170 }, 
+          height: { xs: 130, sm: 150, md: 170 }, 
           margin: '0 auto', 
-          mb: 2.5,
+          mb: 2,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'center'
         }}>
-          {/* Круг прогресса с абсолютной позицией и высоким z-index */}
-          <Box 
-            sx={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              width: '100%', 
-              height: '100%', 
+          <AnimatedCircularProgress 
+            value={caloriesPercentage} 
+            color="#4285F4" 
+            size={170} 
+            thickness={8} 
+          />
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            style={{
+              position: 'absolute',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'center'
             }}
           >
-            {/* Передаем прямое числовое значение процента */}
-            <AnimatedCircularProgress 
-              value={caloriesPercentage} 
-              color="#4285F4" 
-              size={150} 
-              thickness={6} 
-            />
-          </Box>
-          
-          {/* Текст внутри круга */}
-          <Box 
-            sx={{ 
-              position: 'relative', 
-              zIndex: 2, 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              pointerEvents: 'none', // Чтобы текст не перекрывал круг для кликов
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <span className="material-symbols-rounded" style={{ fontSize: {xs: 30, sm:34}, color: '#4285F4', marginBottom: '2px' }}>local_fire_department</span>
-              <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.1, fontSize: {xs: '1.8rem', sm: '2rem', md: '2.2rem'} }}>
-                {summary.calories}
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: {xs: '0.85rem', sm: '0.9rem'} }}>
-                из {kbju.calories} ккал
-              </Typography>
-            </motion.div>
-          </Box>
+            <span className="material-symbols-rounded" style={{ fontSize: {xs: 26, sm: 30, md: 34}, color: '#4285F4', marginBottom: '2px' }}>local_fire_department</span>
+            <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.1, fontSize: {xs: '1.6rem', sm: '1.8rem', md: '2rem'} }}>
+              {summary.calories}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: {xs: '0.8rem', sm: '0.85rem', md: '0.9rem'} }}>
+              из {kbju.calories} ккал
+            </Typography>
+          </motion.div>
         </Box>
         <motion.div
           whileHover={{ scale: 1.03 }}
@@ -470,7 +460,13 @@ function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
             color="primary" 
             onClick={onNavigateToCalculator} 
             startIcon={<span className="material-symbols-rounded">add_circle</span>} 
-            sx={{ mt: 1, borderRadius: '20px', px: {xs:2.5, sm:3}, py: {xs: 1, sm: 1.2}, fontSize: {xs:15, sm:16} }}
+            sx={{ 
+              mt: 1, 
+              borderRadius: '20px', 
+              px: {xs: 2, sm: 2.5, md: 3}, 
+              py: {xs: 0.8, sm: 1, md: 1.2}, 
+              fontSize: {xs: 14, sm: 15, md: 16} 
+            }}
           >
             Добавить приём пищи
           </Button>
@@ -478,13 +474,13 @@ function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
       </Card>
 
       {/* Macronutrients Section */}
-      <Box sx={{ width: '100%', maxWidth: {xs: 380, sm: 420, md: 480} }}>
-        <Typography variant="h6" component="h3" sx={{ fontWeight: 600, color: 'text.primary', width: '100%', textAlign: 'left', fontSize: {xs: '1.1rem', sm: '1.2rem'}, mb: 1.5 }}>
+      <Box sx={{ width: '100%', maxWidth: {xs: '100%', sm: 420, md: 480} }}>
+        <Typography variant="h6" component="h3" sx={{ fontWeight: 600, color: 'text.primary', width: '100%', textAlign: 'left', fontSize: {xs: '1rem', sm: '1.1rem', md: '1.2rem'}, mb: 1 }}>
           Макронутриенты
         </Typography>
-        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+        <Grid container spacing={{ xs: 1, sm: 1.5, md: 2 }}>
           {macroData.map((macro, index) => (
-            <Grid xs={12} sm={4} key={macro.name}>
+            <Grid item xs={12} sm={4} key={macro.name}>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -492,7 +488,7 @@ function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
                 style={{ height: '100%' }}
               >
                 <Paper elevation={0} sx={{ 
-                  p: {xs: 1.5, sm:2}, 
+                  p: {xs: 1.2, sm: 1.5, md: 2}, 
                   textAlign: 'center', 
                   borderRadius: 3, 
                   border: 1, 
@@ -500,28 +496,37 @@ function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
                   bgcolor:'background.paper',
                   height: '100%',
                   display: 'flex',
-                  flexDirection: 'column'
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}>
-                  <Box sx={{ mb: 1 }}>
-                    <span className="material-symbols-rounded" style={{ fontSize: {xs:26, sm:28}, color: macro.color, marginBottom: '8px' }}>{macro.icon}</span>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5, fontSize: {xs: '0.9rem', sm: '0.95rem'} }}>{macro.name}</Typography>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: {xs: '0.75rem', sm: '0.8rem'} }}>{macro.value} / {macro.goal} г</Typography>
-                  </Box>
-                  <Box sx={{ mt: 'auto', width: '100%' }}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={Math.min(100, (macro.value / macro.goal) * 100 || 0)}
-                      sx={{ 
-                        height: 6, 
-                        borderRadius: 3, 
-                        bgcolor: 'surfaceVariant.main', 
-                        '& .MuiLinearProgress-bar': { 
-                          bgcolor: macro.color,
-                          transition: 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)' // Плавная анимация
-                        } 
-                      }}
-                    />
-                  </Box>
+                  <span className="material-symbols-rounded" style={{ 
+                    fontSize: {xs: 24, sm: 28, md: 32}, 
+                    color: macro.color,
+                    marginBottom: {xs: 0.5, sm: 1}
+                  }}>
+                    {macro.icon}
+                  </span>
+                  <Typography variant="subtitle2" sx={{ 
+                    fontWeight: 600, 
+                    color: 'text.primary',
+                    fontSize: {xs: '0.9rem', sm: '1rem'}
+                  }}>
+                    {macro.name}
+                  </Typography>
+                  <Typography variant="h6" sx={{ 
+                    fontWeight: 700, 
+                    color: macro.color,
+                    fontSize: {xs: '1.1rem', sm: '1.2rem', md: '1.3rem'}
+                  }}>
+                    {macro.value}
+                  </Typography>
+                  <Typography variant="caption" sx={{ 
+                    color: 'text.secondary',
+                    fontSize: {xs: '0.75rem', sm: '0.8rem'}
+                  }}>
+                    из {macro.goal} г
+                  </Typography>
                 </Paper>
               </motion.div>
             </Grid>
