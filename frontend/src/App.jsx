@@ -70,8 +70,13 @@ const AnimatedCircularProgress = ({ value, color, size, thickness }) => {
   const halfSize = size / 2;
   const radius = halfSize - thickness;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffsetValue = circumference * (1 - value / 100);
   
+  // Вычисляем dashoffset на основе процента
+  const percent = typeof value === 'number' ? value : 0; // Значение в процентах (0-100)
+  const strokeDashoffset = circumference * (1 - (percent / 100));
+  
+  console.log("AnimatedCircularProgress rendering:", { percent, strokeDashoffset, circumference });
+
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
       {/* Фоновый серый круг */}
@@ -84,20 +89,19 @@ const AnimatedCircularProgress = ({ value, color, size, thickness }) => {
         cy={halfSize}
       />
       
-      {/* Цветной прогресс круг */}
-      <circle 
+      {/* Цветной прогресс круг с анимацией */}
+      <motion.circle 
         stroke={color}
         fill="transparent"
         strokeWidth={thickness}
         strokeDasharray={circumference}
-        strokeDashoffset={strokeDashoffsetValue}
+        initial={{ strokeDashoffset: circumference }}
+        animate={{ strokeDashoffset }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        strokeLinecap="round"
         r={radius}
         cx={halfSize}
         cy={halfSize}
-        style={{
-          strokeLinecap: 'round',
-          transition: 'stroke-dashoffset 1s ease-in-out',
-        }}
       />
     </svg>
   );
@@ -120,18 +124,23 @@ function App() {
     }
   }, [stage]);
 
-  const kbju = getKBJU(profile);
+  const kbju = profile.customKBJU || getKBJU(profile);
   const [mealsByType, setMealsByType] = useState(initialMealsByType);
   
-  const summary = Object.values(mealsByType).flat().reduce(
-    (acc, m) => ({
-      calories: acc.calories + (m.calories || 0),
-      protein: acc.protein + (m.protein || 0),
-      carb: acc.carb + (m.carb || 0),
-      fat: acc.fat + (m.fat || 0)
-    }),
-    { calories: 0, protein: 0, carb: 0, fat: 0 }
-  );
+  // Используем useMemo для summary, чтобы он пересчитывался при изменении mealsByType
+  const summary = React.useMemo(() => {
+    console.log("Recalculating summary:", mealsByType); // Диагностика
+    return Object.values(mealsByType).flat().reduce(
+      (acc, m) => ({
+        calories: acc.calories + (m.calories || 0),
+        protein: acc.protein + (m.protein || 0),
+        carb: acc.carb + (m.carb || 0),
+        fat: acc.fat + (m.fat || 0)
+      }),
+      { calories: 0, protein: 0, carb: 0, fat: 0 }
+    );
+  }, [mealsByType]);
+
   const [messages, setMessages] = useState([]);
   const [editName, setEditName] = useState(false);
   const [newName, setNewName] = useState(profile.name);
@@ -365,8 +374,9 @@ function App() {
 
 // --- ГЛАВНАЯ СТРАНИЦА ---
 function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
-  const caloriesPercentage = Math.min(100, (summary.calories / kbju.calories) * 100 || 0);
-  console.log("caloriesPercentage:", caloriesPercentage); // Добавим для диагностики
+  // Вычисляем процент заполнения калорий
+  const caloriesPercentage = Math.min(100, Math.round((summary.calories / kbju.calories) * 100) || 0);
+  console.log("Calories: ", summary.calories, "/", kbju.calories, "=", caloriesPercentage, "%");
 
   const macroData = [
     { name: 'Углеводы', value: summary.carb, goal: kbju.carb, color: 'primary.main', icon: 'grain' },
@@ -415,9 +425,10 @@ function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
               justifyContent: 'center',
             }}
           >
+            {/* Передаем прямое числовое значение процента */}
             <AnimatedCircularProgress 
               value={caloriesPercentage} 
-              color="var(--mui-palette-primary-main)" 
+              color="#4285F4" 
               size={150} 
               thickness={6} 
             />
@@ -440,7 +451,7 @@ function HomeMobile({ kbju, summary, onNavigateToCalculator }) {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
             >
-              <span className="material-symbols-rounded" style={{ fontSize: {xs: 30, sm:34}, color: 'var(--mui-palette-primary-main)', marginBottom: '2px' }}>local_fire_department</span>
+              <span className="material-symbols-rounded" style={{ fontSize: {xs: 30, sm:34}, color: '#4285F4', marginBottom: '2px' }}>local_fire_department</span>
               <Typography variant="h4" component="div" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.1, fontSize: {xs: '1.8rem', sm: '2rem', md: '2.2rem'} }}>
                 {summary.calories}
               </Typography>

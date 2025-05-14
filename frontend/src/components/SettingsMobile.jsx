@@ -14,6 +14,8 @@ import Chip from '@mui/material/Chip';
 import InputAdornment from '@mui/material/InputAdornment';
 import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import ToggleButton from '@mui/material/ToggleButton';
 
 // Настройки профиля
 export default function SettingsMobile({
@@ -26,6 +28,16 @@ export default function SettingsMobile({
   onBack
 }) {
   const [saved, setSaved] = React.useState(false);
+  // Добавляем состояние для режима КБЖУ (auto или manual)
+  const [kbjuMode, setKbjuMode] = React.useState(profile.customKBJU ? "manual" : "auto");
+  // Состояние для хранения пользовательских значений КБЖУ
+  const defaultKBJU = { 
+    calories: 2000, 
+    protein: 75, 
+    fat: 60, 
+    carb: 250 
+  };
+  const [userKBJU, setUserKBJU] = React.useState(profile.customKBJU || defaultKBJU);
 
   function handleSaveName() {
     setProfile(p => ({ ...p, name: newName }));
@@ -35,6 +47,48 @@ export default function SettingsMobile({
   
   function handleUpdateProfile(key, value) {
     setProfile(p => ({ ...p, [key]: value }));
+    showSavedMessage();
+  }
+  
+  // Обработчик изменения режима КБЖУ
+  function handleKBJUModeChange(event, newMode) {
+    if (newMode !== null) {
+      setKbjuMode(newMode);
+      // Если режим изменился, обновляем профиль
+      if (newMode === 'auto' && profile.customKBJU) {
+        // Удаляем пользовательские значения из профиля
+        setProfile(p => {
+          const { customKBJU, ...rest } = p;
+          return rest;
+        });
+        showSavedMessage();
+      } else if (newMode === 'manual' && !profile.customKBJU) {
+        // Добавляем пользовательские значения в профиль
+        setProfile(p => ({
+          ...p,
+          customKBJU: { ...userKBJU }
+        }));
+        showSavedMessage();
+      }
+    }
+  }
+  
+  // Обработчик изменения пользовательских значений КБЖУ
+  function handleCustomKBJUChange(key, value) {
+    const numValue = parseInt(value, 10) || 0;
+    setUserKBJU(prev => ({
+      ...prev,
+      [key]: numValue
+    }));
+    
+    // Обновляем профиль
+    setProfile(p => ({
+      ...p,
+      customKBJU: {
+        ...p.customKBJU || userKBJU,
+        [key]: numValue
+      }
+    }));
     showSavedMessage();
   }
   
@@ -57,11 +111,6 @@ export default function SettingsMobile({
     { value: "gain", label: "Набрать вес", icon: "trending_up", description: "Профицит калорий для набора массы" },
   ];
   
-  const genders = [
-      { value: "male", label: "Мужской", icon: "male" },
-      { value: "female", label: "Женский", icon: "female" },
-  ];
-
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
@@ -225,14 +274,100 @@ export default function SettingsMobile({
             </Typography>
           </Box>
           
-          <Chip 
-            icon={<span className="material-symbols-rounded" style={{ fontSize: 18 }}>calculate</span>}
-            label="КБЖУ автоматически"
+          <ToggleButtonGroup
+            value={kbjuMode}
+            exclusive
+            onChange={handleKBJUModeChange}
+            aria-label="Режим КБЖУ"
+            size="small"
             color="primary"
-            variant="outlined"
-            sx={{ fontWeight: 500 }}
-          />
+            sx={{ height: 36 }}
+          >
+            <ToggleButton value="auto" aria-label="КБЖУ автоматически">
+              <span className="material-symbols-rounded" style={{ fontSize: 18, marginRight: 4 }}>calculate</span>
+              Авто
+            </ToggleButton>
+            <ToggleButton value="manual" aria-label="КБЖУ вручную">
+              <span className="material-symbols-rounded" style={{ fontSize: 18, marginRight: 4 }}>edit</span>
+              Вручную
+            </ToggleButton>
+          </ToggleButtonGroup>
         </Box>
+        
+        {kbjuMode === "manual" && (
+          <Box 
+            component={motion.div}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            sx={{ mt: 0, mb: 0 }}
+          >
+            <Paper
+              elevation={0}
+              sx={{ p: 2, borderRadius: 3, bgcolor: 'surfaceVariant.main' }}
+            >
+              <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
+                Настройка КБЖУ вручную
+              </Typography>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Калории"
+                    type="number"
+                    InputProps={{ 
+                      endAdornment: <InputAdornment position="end">ккал</InputAdornment>,
+                      inputProps: { min: 500, max: 10000 }
+                    }}
+                    value={userKBJU.calories}
+                    onChange={(e) => handleCustomKBJUChange('calories', e.target.value)}
+                    sx={{ mb: 1 }}
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <TextField
+                    fullWidth
+                    label="Белки"
+                    type="number"
+                    InputProps={{ 
+                      endAdornment: <InputAdornment position="end">г</InputAdornment>,
+                      inputProps: { min: 10, max: 500 }
+                    }}
+                    value={userKBJU.protein}
+                    onChange={(e) => handleCustomKBJUChange('protein', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <TextField
+                    fullWidth
+                    label="Жиры"
+                    type="number"
+                    InputProps={{ 
+                      endAdornment: <InputAdornment position="end">г</InputAdornment>,
+                      inputProps: { min: 10, max: 500 }
+                    }}
+                    value={userKBJU.fat}
+                    onChange={(e) => handleCustomKBJUChange('fat', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <TextField
+                    fullWidth
+                    label="Углеводы"
+                    type="number"
+                    InputProps={{ 
+                      endAdornment: <InputAdornment position="end">г</InputAdornment>,
+                      inputProps: { min: 10, max: 1000 }
+                    }}
+                    value={userKBJU.carb}
+                    onChange={(e) => handleCustomKBJUChange('carb', e.target.value)}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+          </Box>
+        )}
 
         <Box component={motion.div} variants={itemVariants}>
           <SectionHeader title="Имя профиля" icon="person" />
@@ -316,67 +451,24 @@ export default function SettingsMobile({
         <Box component={motion.div} variants={itemVariants}>
           <SectionHeader title="Пол" icon="wc" />
           
-          <Grid container spacing={1.5}>
-            {genders.map(gender => (
-              <Grid xs={6} key={gender.value}>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Paper
-                    elevation={0}
-                    onClick={() => handleUpdateProfile('sex', gender.value)}
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 3,
-                      border: 1,
-                      borderColor: profile.sex === gender.value ? 'primary.main' : 'divider',
-                      bgcolor: profile.sex === gender.value ? 'action.selected' : 'background.paper',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 1,
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        borderColor: profile.sex === gender.value ? 'primary.dark' : 'grey.400',
-                        boxShadow: profile.sex === gender.value ? '0 0 0 2px var(--mui-palette-primary-light)' : '0 1px 5px rgba(0,0,0,0.08)',
-                      }
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: '50%',
-                        bgcolor: profile.sex === gender.value ? 'primary.light' : 'surfaceVariant.main',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        mb: 0.5
-                      }}
-                    >
-                      <span
-                        className="material-symbols-rounded"
-                        style={{
-                          fontSize: 28,
-                          color: profile.sex === gender.value ? 'var(--mui-palette-primary-main)' : 'var(--mui-palette-text-secondary)'
-                        }}
-                      >
-                        {gender.icon}
-                      </span>
-                    </Box>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontWeight: profile.sex === gender.value ? 600 : 500,
-                        color: profile.sex === gender.value ? 'primary.main' : 'text.primary'
-                      }}
-                    >
-                      {gender.label}
-                    </Typography>
-                  </Paper>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
+          <ToggleButtonGroup
+            value={profile.sex}
+            exclusive
+            onChange={(e, newValue) => newValue && handleUpdateProfile('sex', newValue)}
+            aria-label="Пол"
+            color="primary"
+            fullWidth
+            sx={{ mb: 2 }}
+          >
+            <ToggleButton value="male" aria-label="Мужской">
+              <span className="material-symbols-rounded" style={{ marginRight: 8 }}>male</span>
+              Мужской
+            </ToggleButton>
+            <ToggleButton value="female" aria-label="Женский">
+              <span className="material-symbols-rounded" style={{ marginRight: 8 }}>female</span>
+              Женский
+            </ToggleButton>
+          </ToggleButtonGroup>
         </Box>
 
         <motion.div variants={itemVariants}>

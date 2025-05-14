@@ -13,6 +13,8 @@ import Card from '@mui/material/Card';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid';
+import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
 
 // Компонент для отображения списка блюд
 export default function MealsMobile({ mealsByType, onBack }) {
@@ -220,48 +222,129 @@ export default function MealsMobile({ mealsByType, onBack }) {
                             <Card 
                               component={motion.div}
                               variants={itemVariants}
-                              whileHover={{ scale: 1.01, boxShadow: '0 4px 15px rgba(0,0,0,0.07)' }}
+                              whileHover={{ scale: 1.02, boxShadow: '0 8px 20px rgba(0,0,0,0.1)' }}
                               elevation={1}
                               sx={{ 
-                                p: 2, 
-                                borderLeft: `4px solid ${mealTypeColor(type)}`,
-                                borderRadius: 2
+                                p: 0, 
+                                overflow: 'hidden',
+                                borderRadius: 3
                               }}
                             >
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Box>
-                                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                                    <Typography variant="body1" sx={{ fontWeight: 600, mr: 1 }}>
-                                      {meal.name}
-                                    </Typography>
-                                    {meal.emoji && <Typography variant="body1">{meal.emoji}</Typography>}
-                                  </Box>
-                                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                    <Chip 
-                                      size="small" 
-                                      label={`Б: ${meal.protein}г`} 
-                                      sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', height: 24 }} 
-                                    />
-                                    <Chip 
-                                      size="small" 
-                                      label={`Ж: ${meal.fat}г`} 
-                                      sx={{ bgcolor: '#fff3e0', color: '#e65100', height: 24 }} 
-                                    />
-                                    <Chip 
-                                      size="small" 
-                                      label={`У: ${meal.carb}г`} 
-                                      sx={{ bgcolor: '#e3f2fd', color: '#0277bd', height: 24 }} 
-                                    />
+                              {/* Градиентный заголовок */}
+                              <Box 
+                                sx={{ 
+                                  background: `linear-gradient(90deg, ${mealTypeColor(type)}50 0%, ${mealTypeColor(type)}20 100%)`,
+                                  p: 1.5,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1
+                                }}
+                              >
+                                <Box 
+                                  sx={{ 
+                                    width: 32, 
+                                    height: 32, 
+                                    borderRadius: '50%', 
+                                    bgcolor: mealTypeColor(type),
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  <span className="material-symbols-rounded" style={{ color: 'white', fontSize: 18 }}>
+                                    {mealTypeIcon(type)}
+                                  </span>
+                                </Box>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                  {meal.name} {meal.emoji && meal.emoji}
+                                </Typography>
+                                <Chip 
+                                  size="small" 
+                                  label={`${meal.calories} ккал`} 
+                                  sx={{ 
+                                    bgcolor: 'white', 
+                                    color: mealTypeColor(type), 
+                                    fontWeight: 700, 
+                                    ml: 'auto' 
+                                  }} 
+                                />
+                              </Box>
+                              
+                              {/* Тело карточки */}
+                              <Box sx={{ p: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    Порция: <b>{meal.grams} г</b>
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <Tooltip title="Редактировать" arrow>
+                                      <IconButton size="small" sx={{ p: 0.5 }}>
+                                        <span className="material-symbols-rounded" style={{ fontSize: 18 }}>edit</span>
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Копировать" arrow>
+                                      <IconButton size="small" sx={{ p: 0.5 }}>
+                                        <span className="material-symbols-rounded" style={{ fontSize: 18 }}>content_copy</span>
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Удалить" arrow>
+                                      <IconButton size="small" sx={{ p: 0.5 }}>
+                                        <span className="material-symbols-rounded" style={{ fontSize: 18 }}>delete</span>
+                                      </IconButton>
+                                    </Tooltip>
                                   </Box>
                                 </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                  <Typography variant="body1" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                                    {meal.calories} ккал
-                                  </Typography>
-                                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                    {meal.grams} г
-                                  </Typography>
-                                </Box>
+                                
+                                <Grid container spacing={1.5}>
+                                  <Grid item xs={4}>
+                                    <Paper 
+                                      elevation={0} 
+                                      sx={{ 
+                                        p: 1, 
+                                        textAlign: 'center', 
+                                        bgcolor: '#e8f5e9', 
+                                        borderRadius: 2 
+                                      }}
+                                    >
+                                      <Typography variant="caption" sx={{ color: '#2e7d32', display: 'block' }}>Белки</Typography>
+                                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+                                        {meal.protein} г
+                                      </Typography>
+                                    </Paper>
+                                  </Grid>
+                                  <Grid item xs={4}>
+                                    <Paper 
+                                      elevation={0} 
+                                      sx={{ 
+                                        p: 1, 
+                                        textAlign: 'center', 
+                                        bgcolor: '#fff3e0', 
+                                        borderRadius: 2 
+                                      }}
+                                    >
+                                      <Typography variant="caption" sx={{ color: '#e65100', display: 'block' }}>Жиры</Typography>
+                                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#e65100' }}>
+                                        {meal.fat} г
+                                      </Typography>
+                                    </Paper>
+                                  </Grid>
+                                  <Grid item xs={4}>
+                                    <Paper 
+                                      elevation={0} 
+                                      sx={{ 
+                                        p: 1, 
+                                        textAlign: 'center', 
+                                        bgcolor: '#e3f2fd', 
+                                        borderRadius: 2 
+                                      }}
+                                    >
+                                      <Typography variant="caption" sx={{ color: '#0277bd', display: 'block' }}>Углеводы</Typography>
+                                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0277bd' }}>
+                                        {meal.carb} г
+                                      </Typography>
+                                    </Paper>
+                                  </Grid>
+                                </Grid>
                               </Box>
                             </Card>
                           </Grid>
