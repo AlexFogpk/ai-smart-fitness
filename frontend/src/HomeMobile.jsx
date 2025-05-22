@@ -12,7 +12,6 @@ export default function HomeMobile({ kbju, summary, onMenuClick }) {
     <>
       <Header onMenuClick={onMenuClick} />
       <Container 
-        maxWidth="sm"
         sx={{
           pt: { xs: 2, sm: 3 },
           pb: { xs: 2, sm: 3 },
@@ -21,21 +20,23 @@ export default function HomeMobile({ kbju, summary, onMenuClick }) {
           alignItems: 'center',
           minHeight: 'calc(100vh - 56px)',
           boxSizing: 'border-box',
-          px: { xs: 1, sm: 2 }
+          px: { xs: 1, sm: 2 },
+          width: '100%',
+          maxWidth: '100%'
         }}
       >
         <Paper 
           elevation={2}
           sx={{
             width: '100%',
-            maxWidth: { xs: '100%', sm: 480 },
             p: { xs: 1.5, sm: 2.5 },
             display: 'flex',
             flexDirection: 'column',
             gap: { xs: 2, sm: 3 },
             borderRadius: { xs: 2, sm: 3 },
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            boxSizing: 'border-box'
           }}
         >
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>

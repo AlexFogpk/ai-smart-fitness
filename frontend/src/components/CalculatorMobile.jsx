@@ -641,7 +641,7 @@ export default function CalculatorMobile({
         elevation={2}
         sx={{
           width: '100%', 
-          maxWidth: { xs: '100%', sm: 480 },
+          maxWidth: '100%',
           p: { xs: 1.5, sm: 2.5 }, 
           display: 'flex', 
           flexDirection: 'column', 
@@ -649,7 +649,8 @@ export default function CalculatorMobile({
           borderRadius: { xs: 2, sm: 3 },
           position: 'relative',
           overflow: 'hidden',
-          mx: { xs: 0, sm: 2 }
+          mx: { xs: 0, sm: 2 },
+          boxSizing: 'border-box'
         }}
       >
         {/* Декоративный элемент с цветом текущего типа приема пищи */}
