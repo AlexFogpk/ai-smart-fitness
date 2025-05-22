@@ -75,3 +75,11 @@ button:focus-visible {
   when using a component library like MUI to prevent conflicts; 
   use MUI Typography, Button, Link components and theme them instead.
 */
+
+html, body, #root {
+  width: 100%;
+  min-width: 0;
+  max-width: 100vw;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
