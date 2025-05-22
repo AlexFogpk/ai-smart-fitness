@@ -1,32 +1,124 @@
 import React from "react";
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Grid from '@mui/material/Grid';
+import ProgressRings from "./components/ProgressRings";
 import Header from "./Header";
-import ProgressRings from "./ProgressRings"; // твой компонент с анимированными кольцами
-import "./Header.css"; // если выносил стили
 
-export default function HomeMobile(props) {
-  const { kbju, summary, onMenuClick } = props;
+export default function HomeMobile({ kbju, summary, onMenuClick }) {
   return (
-    <div>
+    <>
       <Header onMenuClick={onMenuClick} />
-      <div style={{ height: 64 }} /> {/* отступ под фиксированный header */}
-      <div className="progress-rings-row" style={{ marginTop: 44 }}>
-        <ProgressRings
-          calories={summary.calories}
-          caloriesGoal={kbju.calories}
-          protein={summary.protein}
-          proteinGoal={kbju.protein}
-          fat={summary.fat}
-          fatGoal={kbju.fat}
-          carb={summary.carb}
-          carbGoal={kbju.carb}
-        />
-      </div>
-      <div className="mainpage-macros-row">
-        <span style={{ color: "#3bafe8" }}>Калории: <b>{summary.calories}</b>/{kbju.calories}</span>
-        <span style={{ color: "#5fc77f" }}>Б: <b>{summary.protein}</b>/{kbju.protein}</span>
-        <span style={{ color: "#ffb24a" }}>Ж: <b>{summary.fat}</b>/{kbju.fat}</span>
-        <span style={{ color: "#ff6f61" }}>У: <b>{summary.carb}</b>/{kbju.carb}</span>
-      </div>
-    </div>
+      <Container 
+        maxWidth="sm"
+        sx={{
+          pt: { xs: 2, sm: 3 },
+          pb: { xs: 2, sm: 3 },
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          minHeight: 'calc(100vh - 56px)',
+          boxSizing: 'border-box',
+          px: { xs: 1, sm: 2 }
+        }}
+      >
+        <Paper 
+          elevation={2}
+          sx={{
+            width: '100%',
+            maxWidth: { xs: '100%', sm: 480 },
+            p: { xs: 1.5, sm: 2.5 },
+            display: 'flex',
+            flexDirection: 'column',
+            gap: { xs: 2, sm: 3 },
+            borderRadius: { xs: 2, sm: 3 },
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
+            <ProgressRings
+              calories={summary.calories}
+              caloriesGoal={kbju.calories}
+              protein={summary.protein}
+              proteinGoal={kbju.protein}
+              fat={summary.fat}
+              fatGoal={kbju.fat}
+              carb={summary.carb}
+              carbGoal={kbju.carb}
+            />
+          </Box>
+
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 1.5, 
+                  textAlign: 'center', 
+                  bgcolor: '#e3f2fd', 
+                  borderRadius: 2 
+                }}
+              >
+                <Typography variant="caption" sx={{ color: '#1976d2', display: 'block' }}>Калории</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1976d2' }}>
+                  {summary.calories} / {kbju.calories}
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={6}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 1.5, 
+                  textAlign: 'center', 
+                  bgcolor: '#e8f5e9', 
+                  borderRadius: 2 
+                }}
+              >
+                <Typography variant="caption" sx={{ color: '#2e7d32', display: 'block' }}>Белки</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+                  {summary.protein} / {kbju.protein} г
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={6}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 1.5, 
+                  textAlign: 'center', 
+                  bgcolor: '#fff3e0', 
+                  borderRadius: 2 
+                }}
+              >
+                <Typography variant="caption" sx={{ color: '#e65100', display: 'block' }}>Жиры</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#e65100' }}>
+                  {summary.fat} / {kbju.fat} г
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={6}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 1.5, 
+                  textAlign: 'center', 
+                  bgcolor: '#fce4ec', 
+                  borderRadius: 2 
+                }}
+              >
+                <Typography variant="caption" sx={{ color: '#c2185b', display: 'block' }}>Углеводы</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#c2185b' }}>
+                  {summary.carb} / {kbju.carb} г
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Container>
+    </>
   );
 }

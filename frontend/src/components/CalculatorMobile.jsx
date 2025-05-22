@@ -172,7 +172,8 @@ function AIInputForm({
   fadeVariants,
   inputVariants,
   meal,
-  setMeal
+  setMeal,
+  setAiResults
 }) {
   return (
     <motion.div
@@ -580,7 +581,7 @@ export default function CalculatorMobile({
         }));
         
         setIsAnalyzing(false);
-      } catch (error) {
+      } catch {
         setAiError('Не удалось проанализировать блюдо. Пожалуйста, попробуйте другой запрос или введите данные вручную.');
         setIsAnalyzing(false);
       }
@@ -623,29 +624,32 @@ export default function CalculatorMobile({
       exit="exit"
       maxWidth="sm"
       sx={{
-        pt: { xs: 1.5, sm: 2 }, 
-        pb: { xs: 1.5, sm: 2 }, 
+        pt: { xs: 1, sm: 2 }, 
+        pb: { xs: 1, sm: 2 }, 
         display: 'flex', 
         flexDirection: 'column', 
         alignItems: 'center',
         minHeight: 'calc(100vh - 56px)',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        px: { xs: 1.5, sm: 2 }
+        px: { xs: 1, sm: 2 },
+        width: '100%',
+        maxWidth: '100%'
       }}
     >
       <Paper 
         elevation={2}
         sx={{
           width: '100%', 
-          maxWidth: 480,
-          p: { xs: 2, sm: 2.5 }, 
+          maxWidth: { xs: '100%', sm: 480 },
+          p: { xs: 1.5, sm: 2.5 }, 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: { xs: 1.5, sm: 2 },
-          borderRadius: 3,
+          gap: { xs: 1, sm: 2 },
+          borderRadius: { xs: 2, sm: 3 },
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          mx: { xs: 0, sm: 2 }
         }}
       >
         {/* Декоративный элемент с цветом текущего типа приема пищи */}
@@ -806,6 +810,7 @@ export default function CalculatorMobile({
               inputVariants={inputVariants}
               meal={meal}
               setMeal={setMeal}
+              setAiResults={setAiResults}
             />
           )}
         </AnimatePresence>
