@@ -618,11 +618,12 @@ export default function CalculatorMobile({
   return (
     <Container 
       component={motion.div} 
+      disableGutters
+      maxWidth={false}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
       exit="exit"
-      maxWidth="sm"
       sx={{
         pt: { xs: 1, sm: 2 }, 
         pb: { xs: 1, sm: 2 }, 
@@ -634,7 +635,8 @@ export default function CalculatorMobile({
         overflow: 'hidden',
         px: { xs: 1, sm: 2 },
         width: '100%',
-        maxWidth: '100%'
+        maxWidth: '100%',
+        overflowX: 'hidden'
       }}
     >
       <Paper 

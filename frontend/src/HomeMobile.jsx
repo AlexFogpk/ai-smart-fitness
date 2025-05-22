@@ -12,6 +12,8 @@ export default function HomeMobile({ kbju, summary, onMenuClick }) {
     <>
       <Header onMenuClick={onMenuClick} />
       <Container 
+        disableGutters
+        maxWidth={false}
         sx={{
           pt: { xs: 2, sm: 3 },
           pb: { xs: 2, sm: 3 },
@@ -22,7 +24,8 @@ export default function HomeMobile({ kbju, summary, onMenuClick }) {
           boxSizing: 'border-box',
           px: { xs: 1, sm: 2 },
           width: '100%',
-          maxWidth: '100%'
+          maxWidth: '100%',
+          overflowX: 'hidden'
         }}
       >
         <Paper 
