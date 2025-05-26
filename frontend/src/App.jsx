@@ -125,6 +125,10 @@ function App() {
     const savedMeals = localStorage.getItem("mealsByType");
     return savedMeals ? JSON.parse(savedMeals) : initialMealsByType;
   });
+  const [chatMessages, setChatMessages] = useState(() => {
+    const savedMessages = localStorage.getItem("chatMessages");
+    return savedMessages ? JSON.parse(savedMessages) : [];
+  });
   const [currentKBJU, setCurrentKBJU] = useState(getKBJU(profile));
   const [currentSummary, setCurrentSummary] = useState({ calories: 0, protein: 0, fat: 0, carb: 0 });
   const [tab, setTab] = useState("home");
@@ -156,6 +160,11 @@ function App() {
     localStorage.setItem("mealsByType", JSON.stringify(mealsByType));
   }, [mealsByType]);
   
+  // Save chat messages to localStorage
+  useEffect(() => {
+    localStorage.setItem("chatMessages", JSON.stringify(chatMessages));
+  }, [chatMessages]);
+
   // Задержка для отображения лоадера при первом запуске (симуляция)
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -208,7 +217,7 @@ function App() {
   } else if (tab === "calc") {
     ActiveComponent = <CalculatorMobile mealsByType={mealsByType} setMealsByType={setMealsByType} kbju={currentKBJU} currentSummary={currentSummary} setProfile={setProfile} profile={profile} />; 
   } else if (tab === "chat") {
-    ActiveComponent = <AIChatMobile />;
+    ActiveComponent = <AIChatMobile messages={chatMessages} setMessages={setChatMessages} onBack={() => setTab("home")} username={profile.name} />;
   } else if (tab === "settings") {
     ActiveComponent = <SettingsMobile profile={profile} setProfile={setProfile} />;
   } else if (tab === "meals") {
