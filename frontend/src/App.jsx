@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SideMenu from "./SideMenu";
 import LogoRobot from "./LoadingLogos";
@@ -8,6 +8,7 @@ import CalculatorMobile from "./components/CalculatorMobile";
 import AIChatMobile from "./components/AIChatMobile";
 import SettingsMobile from "./components/SettingsMobile";
 import MealsMobile from "./components/MealsMobile";
+import ProgressDashboard from "./components/ProgressDashboard";
 
 // MUI Imports
 import Box from '@mui/material/Box';
@@ -17,19 +18,23 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
-import LinearProgress from '@mui/material/LinearProgress';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
-import Chip from '@mui/material/Chip';
+import MenuIcon from '@mui/icons-material/Menu';
+import { ru } from 'date-fns/locale';
 
 // ------ Утилиты ------
-function getKBJU({ sex, weight, height, age, activity, goal }) {
+function getKBJU({ sex, weight, height, age, activity, goal, customKBJU }) {
+  if (customKBJU) {
+    return {
+      calories: customKBJU.calories || 0,
+      protein: customKBJU.protein || 0,
+      fat: customKBJU.fat || 0,
+      carb: customKBJU.carb || 0,
+    };
+  }
   let bmr =
     sex === "male"
       ? 10 * weight + 6.25 * height - 5 * age + 5
@@ -41,10 +46,10 @@ function getKBJU({ sex, weight, height, age, activity, goal }) {
   const fat = Math.round(weight * 0.9);
   const carb = Math.round((tdee - (protein * 4 + fat * 9)) / 4);
   return {
-    calories: Math.round(tdee),
-    protein,
-    fat,
-    carb,
+    calories: Math.round(tdee) || 0, // Fallback to 0 if calculation results in NaN
+    protein: protein || 0,
+    fat: fat || 0,
+    carb: carb || 0,
   };
 }
 
@@ -56,6 +61,7 @@ const defaultProfile = {
   activity: 1.375,
   goal: "maintain",
   name: "",
+  customKBJU: null, // Добавлено для ручного ввода КБЖУ
 };
 const initialMealsByType = {
   breakfast: [],
@@ -109,266 +115,176 @@ const AnimatedCircularProgress = ({ value, color, size, thickness }) => {
 
 // ------ Главный компонент ------
 function App() {
-  const [stage, setStage] = useState("splash");
+  const [profile, setProfile] = useState(() => {
+    const savedProfile = localStorage.getItem("userProfile");
+    return savedProfile ? JSON.parse(savedProfile) : defaultProfile;
+  });
+  const [mealsByType, setMealsByType] = useState(() => {
+    const savedMeals = localStorage.getItem("mealsByType");
+    return savedMeals ? JSON.parse(savedMeals) : initialMealsByType;
+  });
+  const [currentKBJU, setCurrentKBJU] = useState(getKBJU(profile));
+  const [currentSummary, setCurrentSummary] = useState({ calories: 0, protein: 0, fat: 0, carb: 0 });
   const [tab, setTab] = useState("home");
-  const [profile, setProfile] = useState(defaultProfile);
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Состояние для общей загрузки
 
-  // функция для навигации, чтобы передать её в HomeMobile
-  const navigateToCalculator = () => setTab("calc");
+  // Для анимации навигации
+  const prevTab = useRef(tab);
+  const initialTab = useRef(tab);
+
+  // Обновляем КБЖУ при изменении профиля
+  useEffect(() => {
+    setCurrentKBJU(getKBJU(profile));
+    localStorage.setItem("userProfile", JSON.stringify(profile));
+  }, [profile]);
+
+  // Обновляем сводку при изменении блюд или КБЖУ
+  useEffect(() => {
+    const summary = Object.values(mealsByType).flat().reduce(
+      (acc, meal) => ({
+        calories: acc.calories + (Number(meal.calories) || 0),
+        protein: acc.protein + (Number(meal.protein) || 0),
+        fat: acc.fat + (Number(meal.fat) || 0),
+        carb: acc.carb + (Number(meal.carb) || 0),
+      }),
+      { calories: 0, protein: 0, fat: 0, carb: 0 }
+    );
+    setCurrentSummary(summary);
+    localStorage.setItem("mealsByType", JSON.stringify(mealsByType));
+  }, [mealsByType]);
+  
+  // Задержка для отображения лоадера при первом запуске (симуляция)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200); // Убрал лого робота, т.к. его нет в импортах сейчас
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Для анимации: определяем направление навигации
+  const isNavigatingForward = (current, previous) => {
+    const order = ["home", "calc", "meals", "progress", "chat", "settings"];
+    return order.indexOf(current) > order.indexOf(previous);
+  };
 
   useEffect(() => {
-    if (stage === "splash") {
-      setTimeout(() => setStage("app"), 1500);
-    }
-  }, [stage]);
-
-  const kbju = profile.customKBJU || getKBJU(profile);
-  const [mealsByType, setMealsByType] = useState(initialMealsByType);
+    prevTab.current = tab;
+  }, [tab]);
   
-  // Используем useMemo для summary, чтобы он пересчитывался при изменении mealsByType
-  const summary = React.useMemo(() => {
-    console.log("Recalculating summary:", mealsByType); // Диагностика
-    return Object.values(mealsByType).flat().reduce(
-      (acc, m) => ({
-        calories: acc.calories + (m.calories || 0),
-        protein: acc.protein + (m.protein || 0),
-        carb: acc.carb + (m.carb || 0),
-        fat: acc.fat + (m.fat || 0)
-      }),
-      { calories: 0, protein: 0, carb: 0, fat: 0 }
-    );
-  }, [mealsByType]);
 
-  const [messages, setMessages] = useState([]);
-  const [editName, setEditName] = useState(false);
-  const [newName, setNewName] = useState(profile.name);
-  const [calcType, setCalcType] = useState("breakfast");
-
-  if (stage === "splash") {
-    return (
-      <Box sx={{
-        minHeight: "100vh", 
-        width: "100vw", 
-        background: (theme) => `linear-gradient(145deg, ${theme.palette.surfaceVariant.main} 0%, ${theme.palette.background.default} 100%)`,
-        display: "flex", 
-        flexDirection: "column", 
-        alignItems: "center", 
-        justifyContent: "center",
-        p: 3,
-        overflow: 'hidden'
-      }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}
-        >
-          <LogoRobot /> 
-          <Typography variant="h3" component="div" sx={{ color: "primary.main", fontWeight: 700, letterSpacing: ".01em", mt: 3, mb:1, textAlign: 'center' }}>
-            SmartFitness AI
-          </Typography>
-          <Typography variant="subtitle1" component="div" sx={{ color: "text.secondary", fontWeight: 500, letterSpacing: ".02em", mb: 4, textAlign: 'center' }}>
-            Персональный ИИ-тренер и диетолог
-          </Typography>
-          <CircularProgress color="primary" size={36} thickness={3.6} />
-        </motion.div>
-      </Box>
-    );
-  }
-
-  const appBarHeight = { xs: 56, sm: 60 };
-
+  // AppBar для всех страниц
   const CommonAppBar = (
-    <AppBar 
-      position="sticky"
-      elevation={1} 
-      sx={{ 
-        bgcolor: 'background.paper', 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        height: appBarHeight
-      }}
-    >
-      <Toolbar sx={{ minHeight: appBarHeight, px: { xs: 1, sm: 1.5 } }}>
-        <Box sx={{display: 'flex', alignItems: 'center', flexShrink: 0, mr: {xs: 0.5, sm:1}}}>
-            <LocalizationProvider dateAdapter={AdapterDateFns} >
-            <DatePicker
-                value={selectedDate}
-                onChange={setSelectedDate}
-                format="MM/dd"
-                enableAccessibleFieldDOMStructure={false}
-                slots={{
-                    openPickerIcon: () => (
-                        <span className="material-symbols-rounded" style={{fontSize: 24, color: 'var(--mui-palette-primary-main)'}}>
-                            calendar_month
-                        </span>
-                    ),
-                }}
-                slotProps={{
-                    textField: {
-                        variant: 'standard',
-                        sx: {
-                            '& .MuiInputBase-root': {
-                                fontWeight: 600,
-                                fontSize: '0.95rem',
-                                color: 'text.primary',
-                                '&:hover': { bgcolor: 'action.hover' }, 
-                                borderRadius: 2,
-                                cursor: 'pointer',
-                                paddingLeft: 0.5
-                            },
-                            '& .MuiInputBase-input': {
-                                p: '4px 0',
-                                width: 50,
-                            },
-                            '& .MuiInput-underline:before': { borderBottom: 'none' },
-                            '& .MuiInput-underline:after': { borderBottom: 'none' },
-                            '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
-                        }
-                    },
-                }}
-            />
-            </LocalizationProvider>
-        </Box>
-        <Typography 
-            variant="h6" 
-            sx={{ 
-                flexGrow: 1, 
-                fontWeight: 700, 
-                color: 'text.primary', 
-                letterSpacing: '.01em', 
-                fontSize: { xs: '1rem', sm: '1.15rem' }, 
-                textAlign: 'center', 
-                mx: {xs: 0.5, sm: 1},
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-            }}
+    <AppBar position="sticky" elevation={1} sx={{ bgcolor: 'background.paper', color: 'text.primary'}}>
+      <Toolbar>
+        <IconButton
+          edge="start"
+          color="inherit"
+          aria-label="menu"
+          onClick={() => setSideMenuOpen(true)}
+          sx={{ mr: 1 }}
         >
-          SmartFitness AI
-        </Typography>
-        <IconButton color="primary" onClick={() => setSideMenuOpen(true)} sx={{ p: {xs: 0.75, sm: 1}, ml: {xs:0.5, sm:1}, flexShrink: 0 }}>
-          <span className="material-symbols-rounded" style={{fontSize: {xs: '24px', sm: '26px'}}}>menu</span>
+          <MenuIcon />
         </IconButton>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+          {tab === 'home' && 'Главная'}
+          {tab === 'calc' && 'Калькулятор КБЖУ'}
+          {tab === 'meals' && 'Мои блюда'}
+          {tab === 'progress' && 'Замеры и Прогресс'}
+          {tab === 'chat' && 'ИИ-Ассистент'}
+          {tab === 'settings' && 'Настройки профиля'}
+        </Typography>
+        {/* Можно добавить иконку пользователя или другие элементы */}
       </Toolbar>
     </AppBar>
   );
 
-  return (
-    <Box sx={{ height: "100vh", display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden'}}> 
-      {CommonAppBar}
-      <SideMenu
-        open={sideMenuOpen}
-        onClose={() => setSideMenuOpen(false)}
-        current={tab}
-        onSelect={setTab}
-        profile={profile}
-      />
-      <Box 
-        component="main"
-        sx={{
-          flexGrow: 1,
-          overflowY: 'auto',
-          width: '100%',
-        }}
-      > 
-        {tab === "home" && (
-          <HomeMobile
-            kbju={kbju}
-            summary={summary}
-            onNavigateToCalculator={navigateToCalculator}
-          />
-        )}
-        {tab === "calc" && (
-          <CalculatorMobile
-            setMealsByType={setMealsByType}
-            calcType={calcType}
-            setCalcType={setCalcType}
-            onBack={() => setTab("home")}
-          />
-        )}
-        {tab === "chat" && (
-          <AIChatMobile
-            messages={messages}
-            setMessages={setMessages}
-            onBack={() => setTab("home")}
-            username={profile.name}
-          />
-        )}
-        {tab === "settings" && (
-          <SettingsMobile
-            profile={profile}
-            setProfile={setProfile}
-            editName={editName}
-            setEditName={setEditName}
-            newName={newName}
-            setNewName={setNewName}
-            onBack={() => setTab("home")}
-          />
-        )}
-        {tab === "meals" && (
-          <MealsMobile
-            mealsByType={mealsByType}
-            onBack={() => setTab("home")}
-          />
-        )}
-        {tab === "programs" && (
-          <Container 
-            component={motion.div}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            maxWidth="sm" 
-            sx={{ 
-              pt: { xs: 2, sm: 3 }, 
-              pb: { xs: 2, sm: 3 }, 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexGrow: 1, 
-              boxSizing: 'border-box'
-            }}
-          >
-            <Paper 
-                elevation={2}
-                sx={{
-                  width: '100%',
-                  maxWidth: 520,
-                  p: { xs: 3, sm: 4 }, 
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  gap: 2
-                }}
+  // Отображение компонента в зависимости от активной вкладки
+  let ActiveComponent;
+  if (tab === "home") {
+    ActiveComponent = <HomeMobile kbju={currentKBJU} summary={currentSummary} onNavigateToCalculator={() => setTab("calc")} />;
+  } else if (tab === "calc") {
+    ActiveComponent = <CalculatorMobile mealsByType={mealsByType} setMealsByType={setMealsByType} kbju={currentKBJU} currentSummary={currentSummary} setProfile={setProfile} profile={profile} />; 
+  } else if (tab === "chat") {
+    ActiveComponent = <AIChatMobile />;
+  } else if (tab === "settings") {
+    ActiveComponent = <SettingsMobile profile={profile} setProfile={setProfile} />;
+  } else if (tab === "meals") {
+    ActiveComponent = <MealsMobile mealsByType={mealsByType} onBack={() => setTab("home")} />;
+  } else if (tab === "progress") { // <-- Вот здесь используем новый компонент
+    ActiveComponent = <ProgressDashboard />;
+  } else {
+    ActiveComponent = (
+      <Container maxWidth="sm" sx={{ textAlign: 'center', py: 4 }}>
+        <Paper elevation={3} sx={{ p: {xs: 2, sm:3, md:4}, borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, minHeight: 300}}>
+          <span className="material-symbols-rounded" style={{ fontSize: 64, color: 'var(--mui-palette-primary-main)' }}>
+            construction
+          </span>
+          <Typography variant="h5" component="h2" sx={{ fontWeight: 700, color: "primary.main"}}>
+            Раздел в разработке
+          </Typography>
+          <Typography variant="body1" sx={{ color: "text.secondary", maxWidth: 380 }}>
+            Мы активно работаем над этим разделом. Скоро здесь будет что-то интересное!
+          </Typography>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            onClick={() => setTab("home")} 
+            startIcon={<span className="material-symbols-rounded">arrow_back</span>}
+            sx={{mt: 2, borderRadius: '20px', px:3}}
             >
-              <span className="material-symbols-rounded" style={{ fontSize: 64, color: 'var(--mui-palette-primary-main)' }}>
-                model_training
-              </span>
-              <Typography variant="h5" component="h2" sx={{ fontWeight: 700, color: "primary.main"}}>
-                Программы тренировок
-              </Typography>
-              <Typography variant="body1" sx={{ color: "text.secondary", maxWidth: 380 }}>
-                Этот раздел находится в разработке. Скоро здесь появятся персональные программы тренировок, составленные нашим ИИ тренером!
-              </Typography>
-              <Button 
-                variant="outlined" 
-                color="primary" 
-                onClick={() => setTab("home")} 
-                startIcon={<span className="material-symbols-rounded">arrow_back</span>}
-                sx={{mt: 2, borderRadius: '20px', px:3}}
-                >
-                Вернуться на главную
-              </Button>
-            </Paper>
-          </Container>
-        )}
+            Вернуться на главную
+          </Button>
+        </Paper>
+      </Container>
+    );
+  }
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+      <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", bgcolor: "background.default" }}>
+        <SideMenu 
+            open={sideMenuOpen} 
+            onClose={() => setSideMenuOpen(false)} 
+            current={tab} 
+            onSelect={(newTab) => { setTab(newTab); setSideMenuOpen(false); }} 
+            profile={profile}
+        />
+        <Box 
+            component="main" 
+            sx={{ 
+                flexGrow: 1, 
+                display: 'flex', // Добавлено для корректной работы AppBar и контента
+                flexDirection: 'column', // Добавлено
+                overflowY: 'auto', 
+                overflowX: 'hidden', 
+                position: 'relative' 
+            }}
+        >
+          {CommonAppBar} {/* AppBar теперь здесь, над контентом */}
+          <Box sx={{ flexGrow: 1, overflowY: 'auto', width: '100%' }}> {/* Обертка для скролла контента */}
+            <AnimatePresence mode='wait'>
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, x: tab === initialTab.current ? 0 : (isNavigatingForward(tab, prevTab.current) ? 30 : -30) }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: isNavigatingForward(tab, prevTab.current) ? -30 : 30 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                style={{ width: '100%', height: '100%' }} // height: 100% для заполнения
+              >
+                {isLoading ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 2 }}>
+                    <LogoRobot /> {/* Убедитесь, что LogoRobot импортирован и доступен */}
+                    <Typography variant="h6">Загрузка данных...</Typography>
+                    <CircularProgress />
+                  </Box>
+                ) : ActiveComponent}
+              </motion.div>
+            </AnimatePresence>
+          </Box>
+        </Box>
       </Box>
-    </Box>
+    </LocalizationProvider>
   );
 }
 

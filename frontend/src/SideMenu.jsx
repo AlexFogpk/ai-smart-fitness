@@ -23,7 +23,7 @@ export default function SideMenu({ open, onClose, current, onSelect, profile = {
     { id: "home", label: "Главная", icon: <FaHome /> },
     { id: "calc", label: "Калькулятор", icon: <FaAppleAlt /> },
     { id: "meals", label: "Мои блюда", icon: <FaUtensils /> },
-    { id: "programs", label: "Программы тренировок", icon: <FaDumbbell />, accent: true },
+    { id: "progress", label: "Замеры и Прогресс", icon: <FaDumbbell />, accent: true },
     { id: "chat", label: "ИИ-чат", icon: <FaRobot /> },
     { id: "settings", label: "Настройки", icon: <FaCog /> },
   ];
