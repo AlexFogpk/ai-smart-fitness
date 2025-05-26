@@ -1,5 +1,13 @@
 {
+  "name": "ai-smart-fitness",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "python3 -m uvicorn app:app --host 0.0.0.0 --port $PORT"
+  },
   "dependencies": {
     "material-symbols": "^0.31.2"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
