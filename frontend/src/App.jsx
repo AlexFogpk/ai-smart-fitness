@@ -21,6 +21,7 @@ import IconButton from '@mui/material/IconButton';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import MenuIcon from '@mui/icons-material/Menu';
